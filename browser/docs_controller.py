@@ -35,9 +35,16 @@ class DocsController:
         self.driver.quit()
     
     def initialize_service(self, credentials):
-        self.service = build('docs', 'v1', credentials=credentials)
+        try:
+            self.service = build('docs', 'v1', credentials=credentials)
+        except NameError:
+            print("Không thể khởi tạo service do thiếu thư viện Google Client.")
 
     def insert_text(self, document_id, text):
+        if not self.service:
+            print("Service chưa được khởi tạo.")
+            return False
+
         try:
             requests = [
                 {
@@ -51,14 +58,18 @@ class DocsController:
             ]
             self.service.documents().batchUpdate(documentId=document_id, body={'requests': requests}).execute()
             return True
-        except HttpError as error:
+        except Exception as error:
             print(f'Đã xảy ra lỗi: {error}')
             return False
 
     def get_document_content(self, document_id):
+        if not self.service:
+            print("Service chưa được khởi tạo.")
+            return None
+
         try:
             document = self.service.documents().get(documentId=document_id).execute()
             return document.get('body').get('content')
-        except HttpError as error:
+        except Exception as error:
             print(f'Đã xảy ra lỗi: {error}')
             return None

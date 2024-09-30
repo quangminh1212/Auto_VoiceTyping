@@ -1,10 +1,19 @@
-import speech_recognition as sr
+try:
+    import speech_recognition as sr
+except ImportError:
+    print("Không thể import speech_recognition. Hãy chắc chắn bạn đã cài đặt thư viện SpeechRecognition.")
+    print("Chạy lệnh: pip install SpeechRecognition")
+    sr = None
 
 class TextManager:
     def __init__(self):
-        self.recognizer = sr.Recognizer()
+        self.recognizer = sr.Recognizer() if sr else None
 
     def speech_to_text(self, audio_file):
+        if not sr:
+            print("Không thể sử dụng chức năng speech_to_text do thiếu thư viện SpeechRecognition.")
+            return None
+
         try:
             with sr.AudioFile(audio_file) as source:
                 audio = self.recognizer.record(source)
@@ -19,4 +28,4 @@ class TextManager:
 
     def process_text(self, text):
         # Xử lý văn bản nếu cần (ví dụ: loại bỏ khoảng trắng thừa, sửa lỗi chính tả, v.v.)
-        return text.strip()
+        return text.strip() if text else None
