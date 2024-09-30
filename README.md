@@ -152,4 +152,22 @@ voicetyping/
 - Cập nhật thường xuyên ChromeDriver để tương thích với phiên bản Chrome mới nhất
 - Thực hiện kiểm tra bảo mật và penetration testing định kỳ
 
-Với kiến trúc này, bạn có thể xây dựng một ứng dụng nhập liệu bằng giọng nói tiếng Việt hiệu quả, tận dụng sức mạnh của Google Docs Voice Typing và tích hợp chặt chẽ với hệ sinh thái Google.
+## Các bước khởi chạy phần mềm
+
+1. Cài đặt môi trường:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # Trên Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+2. Cấu hình Google OAuth:
+   - Tạo một dự án mới trên Google Cloud Console
+   - Kích hoạt Google Docs API và Google Drive API
+   - Tạo thông tin xác thực OAuth 2.0 và tải về file `client_secret.json`
+   - Đặt file `client_secret.json` vào thư mục gốc của dự án
+
+3. Cài đặt ChromeDriver:
+   - Tải ChromeDriver phiên bản tương
+
+With kiến trúc này, bạn có thể xây dựng một ứng dụng nhập liệu bằng giọng nói tiếng Việt hiệu quả, tận dụng sức mạnh của Google Docs Voice Typing và tích hợp chặt chẽ với hệ sinh thái Google.
