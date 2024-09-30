@@ -24,55 +24,79 @@
 - Logging: structlog
 - Bảo mật: cryptography
 
-### Chi tiết các tầng
+### Cấu trúc dự án và Công dụng của từng file
+
+```
+voicetyping/
+├── main.py                 # Điểm khởi đầu của ứng dụng, khởi tạo các thành phần chính
+├── ui/
+│   ├── __init__.py         # Đánh dấu thư mục ui là một Python package
+│   └── main_window.py      # Định nghĩa giao diện chính của ứng dụng
+├── auth/
+│   ├── __init__.py         # Đánh dấu thư mục auth là một Python package
+│   └── google_auth.py      # Xử lý xác thực với Google OAuth 2.0
+├── browser/
+│   ├── __init__.py         # Đánh dấu thư mục browser là một Python package
+│   └── docs_controller.py  # Điều khiển Google Docs thông qua Selenium
+├── text/
+│   ├── __init__.py         # Đánh dấu thư mục text là một Python package
+│   └── manager.py          # Quản lý và xử lý văn bản
+├── system/
+│   ├── __init__.py         # Đánh dấu thư mục system là một Python package
+│   └── interaction.py      # Xử lý tương tác với hệ thống (nhập liệu, phím tắt)
+├── state/
+│   ├── __init__.py         # Đánh dấu thư mục state là một Python package
+│   └── store.py            # Quản lý trạng thái ứng dụng sử dụng RxPY
+└── utils/
+    ├── __init__.py         # Đánh dấu thư mục utils là một Python package
+    ├── security.py         # Xử lý các vấn đề bảo mật, mã hóa
+    └── logger.py           # Cấu hình và quản lý logging
+```
+
+### Chi tiết các tầng và file liên quan
 
 1. Giao diện Người Dùng (UI Layer)
-   - PyQt6 cho giao diện đồ họa
-   - QML cho thiết kế giao diện linh hoạt
-   - Các thành phần: Đăng nhập, Bắt đầu/Dừng ghi âm, Hiển thị trạng thái, Cài đặt
+   - File: `ui/main_window.py`
+   - Công dụng: Định nghĩa giao diện chính của ứng dụng sử dụng PyQt6
 
 2. Tầng Xác thực (Authentication Layer)
-   - Sử dụng Google OAuth 2.0 để đăng nhập
-   - Lưu trữ token an toàn bằng cryptography
-   - Tự động làm mới token khi hết hạn
+   - File: `auth/google_auth.py`
+   - Công dụng: Xử lý quá trình xác thực với Google OAuth 2.0, lưu trữ và làm mới token
 
 3. Tầng Điều khiển Trình duyệt (Browser Automation Layer)
-   - Sử dụng Selenium với ChromeDriver
-   - Mở và điều khiển Google Docs trong chế độ ẩn (headless)
-   - Kích hoạt và quản lý tính năng Voice Typing
+   - File: `browser/docs_controller.py`
+   - Công dụng: Điều khiển Google Docs thông qua Selenium, kích hoạt Voice Typing
 
 4. Tầng Quản lý Văn bản (Text Management Layer)
-   - Trích xuất văn bản từ Google Docs
-   - Xử lý và định dạng văn bản
-   - Tích hợp với clipboard hệ thống
+   - File: `text/manager.py`
+   - Công dụng: Trích xuất, xử lý và quản lý văn bản từ Google Docs
 
 5. Tầng Tương tác Hệ thống (System Interaction Layer)
-   - PyAutoGUI để mô phỏng nhập liệu
-   - Xác định vị trí con trỏ và ứng dụng đang active
-   - Hỗ trợ các phím tắt tùy chỉnh
+   - File: `system/interaction.py`
+   - Công dụng: Xử lý tương tác với hệ thống như nhập liệu, phím tắt sử dụng PyAutoGUI
 
 6. Tầng Quản lý Trạng thái (State Management Layer)
-   - Sử dụng RxPY để quản lý luồng dữ liệu và sự kiện
-   - Xử lý bất đồng bộ với asyncio
-   - Đảm bảo tính nhất quán giữa các tầng
+   - File: `state/store.py`
+   - Công dụng: Quản lý trạng thái ứng dụng sử dụng RxPY, xử lý luồng dữ liệu reactive
 
 7. Tầng Bảo mật và Xử lý Lỗi (Security and Error Handling Layer)
-   - Mã hóa dữ liệu nhạy cảm với cryptography
-   - Logging cấu trúc với structlog
-   - Xử lý lỗi toàn diện và thông báo người dùng
+   - Files: `utils/security.py`, `utils/logger.py`
+   - Công dụng: 
+     - `security.py`: Xử lý các vấn đề bảo mật, mã hóa dữ liệu nhạy cảm
+     - `logger.py`: Cấu hình và quản lý logging, ghi lại các sự kiện và lỗi
 
 ## Luồng Hoạt động Tổng thể
 
-1. Người dùng khởi động ứng dụng
-2. Đăng nhập bằng tài khoản Google
-3. Ứng dụng mở Google Docs trong chế độ ẩn
-4. Người dùng chọn "Bắt đầu ghi âm"
-5. Hệ thống kích hoạt Voice Typing trong Google Docs
+1. Người dùng khởi động ứng dụng (main.py)
+2. Đăng nhập bằng tài khoản Google (auth/google_auth.py)
+3. Ứng dụng mở Google Docs trong chế độ ẩn (browser/docs_controller.py)
+4. Người dùng chọn "Bắt đầu ghi âm" trên giao diện (ui/main_window.py)
+5. Hệ thống kích hoạt Voice Typing trong Google Docs (browser/docs_controller.py)
 6. Người dùng nói, Google Docs chuyển đổi thành văn bản
-7. Ứng dụng trích xuất văn bản từ Google Docs
+7. Ứng dụng trích xuất văn bản từ Google Docs (text/manager.py)
 8. Người dùng di chuyển con trỏ đến vị trí muốn nhập
-9. Chọn "Dán văn bản" hoặc sử dụng phím tắt
-10. Hệ thống tự động nhập văn bản vào vị trí con trỏ
+9. Chọn "Dán văn bản" hoặc sử dụng phím tắt (system/interaction.py)
+10. Hệ thống tự động nhập văn bản vào vị trí con trỏ (system/interaction.py)
 11. Quá trình tiếp tục cho đến khi người dùng chọn "Dừng"
 
 ## Ưu điểm của Kiến trúc này
