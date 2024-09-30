@@ -1,16 +1,27 @@
-import structlog
+import logging
+import os
 
 def setup_logger():
-    structlog.configure(
-        processors=[
-            structlog.processors.add_log_level,
-            structlog.processors.StackInfoRenderer(),
-            structlog.dev.ConsoleRenderer()
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(structlog.get_logger().level),
-        context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(),
-        cache_logger_on_first_use=True,
-    )
+    logger = logging.getLogger('voicetyping')
+    logger.setLevel(logging.DEBUG)
 
-logger = structlog.get_logger()
+    # Tạo handler cho console
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+
+    # Tạo handler cho file
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+    file_handler = logging.FileHandler('logs/voicetyping.log')
+    file_handler.setLevel(logging.DEBUG)
+
+    # Tạo formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+
+    # Thêm handlers vào logger
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    return logger

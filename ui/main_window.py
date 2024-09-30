@@ -8,42 +8,39 @@ class MainWindow(QMainWindow):
         self.text_manager = text_manager
         self.system_interaction = system_interaction
         self.state_store = state_store
-        
+
+        self.init_ui()
+
+    def init_ui(self):
         self.setWindowTitle("VoiceTyping")
-        self.setGeometry(100, 100, 300, 400)
-        
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        
+        self.setGeometry(100, 100, 300, 200)
+
         layout = QVBoxLayout()
-        
-        self.login_button = QPushButton("Đăng nhập Google")
-        self.login_button.clicked.connect(self.login)
-        layout.addWidget(self.login_button)
-        
-        self.start_button = QPushButton("Bắt đầu ghi âm")
-        self.start_button.clicked.connect(self.start_recording)
-        layout.addWidget(self.start_button)
-        
-        self.stop_button = QPushButton("Dừng ghi âm")
-        self.stop_button.clicked.connect(self.stop_recording)
-        layout.addWidget(self.stop_button)
-        
-        self.paste_button = QPushButton("Dán văn bản")
-        self.paste_button.clicked.connect(self.paste_text)
-        layout.addWidget(self.paste_button)
-        
-        self.central_widget.setLayout(layout)
-    
-    def login(self):
-        self.auth.authenticate()
-    
+
+        start_button = QPushButton("Bắt đầu ghi âm")
+        start_button.clicked.connect(self.start_recording)
+        layout.addWidget(start_button)
+
+        stop_button = QPushButton("Dừng ghi âm")
+        stop_button.clicked.connect(self.stop_recording)
+        layout.addWidget(stop_button)
+
+        paste_button = QPushButton("Dán văn bản")
+        paste_button.clicked.connect(self.paste_text)
+        layout.addWidget(paste_button)
+
+        central_widget = QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
     def start_recording(self):
-        self.docs_controller.start_voice_typing()
-    
+        # Thực hiện logic bắt đầu ghi âm
+        pass
+
     def stop_recording(self):
-        self.docs_controller.stop_voice_typing()
-    
+        # Thực hiện logic dừng ghi âm
+        pass
+
     def paste_text(self):
-        text = self.text_manager.get_text()
-        self.system_interaction.paste_text(text)
+        # Thực hiện logic dán văn bản
+        pass

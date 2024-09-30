@@ -5,22 +5,18 @@ import os
 
 class GoogleAuth:
     def __init__(self):
-        self.creds = None
-        self.scopes = ['https://www.googleapis.com/auth/documents']
+        self.credentials = None
+        self.scopes = ['https://www.googleapis.com/auth/documents.readonly']
     
     def authenticate(self):
-        if os.path.exists('token.json'):
-            self.creds = Credentials.from_authorized_user_file('token.json', self.scopes)
-        
-        if not self.creds or not self.creds.valid:
-            if self.creds and self.creds.expired and self.creds.refresh_token:
-                self.creds.refresh(Request())
+        if not self.credentials or not self.credentials.valid:
+            if self.credentials and self.credentials.expired and self.credentials.refresh_token:
+                self.credentials.refresh(Request())
             else:
                 flow = Flow.from_client_secrets_file(
-                    'client_secret.json', self.scopes)
-                self.creds = flow.run_local_server(port=0)
-            
-            with open('token.json', 'w') as token:
-                token.write(self.creds.to_json())
+                    'client_secret.json',
+                    scopes=self.scopes
+                )
+                self.credentials = flow.run_local_server(port=0)
         
-        return self.creds
+        return self.credentials

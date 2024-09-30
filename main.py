@@ -9,18 +9,24 @@ from state.store import StateStore
 from utils.logger import setup_logger
 
 def main():
-    setup_logger()
+    # Thiết lập logger
+    logger = setup_logger()
+
+    # Khởi tạo ứng dụng PyQt
     app = QApplication(sys.argv)
-    
+
+    # Khởi tạo các thành phần
     auth = GoogleAuth()
     docs_controller = DocsController()
     text_manager = TextManager()
     system_interaction = SystemInteraction()
     state_store = StateStore()
-    
+
+    # Khởi tạo cửa sổ chính
     main_window = MainWindow(auth, docs_controller, text_manager, system_interaction, state_store)
     main_window.show()
-    
+
+    # Chạy ứng dụng
     sys.exit(app.exec())
 
 if __name__ == "__main__":
