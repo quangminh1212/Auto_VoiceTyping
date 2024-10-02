@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QMessageBox
+from PyQt6.QtCore import QTimer
 
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
@@ -34,13 +35,18 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def start_recording(self):
-        # Thực hiện logic bắt đầu ghi âm
-        pass
+        if not self.state_store.get_state('is_recording'):
+            self.state_store.set_state('is_recording', True)
+            self.docs_controller.start_voice_typing()
+            QMessageBox.information(self, "Thông báo", "Bắt đầu ghi âm")
 
     def stop_recording(self):
-        # Thực hiện logic dừng ghi âm
-        pass
+        if self.state_store.get_state('is_recording'):
+            self.state_store.set_state('is_recording', False)
+            self.docs_controller.stop_voice_typing()
+            QMessageBox.information(self, "Thông báo", "Dừng ghi âm")
 
     def paste_text(self):
-        # Thực hiện logic dán văn bản
-        pass
+        text = self.docs_controller.get_text()
+        self.system_interaction.paste_text(text)
+        QMessageBox.information(self, "Thông báo", "Đã dán văn bản")
