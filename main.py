@@ -15,13 +15,14 @@ class VoiceTypingApp:
         self.controller = InputController()
 
         self.recognizer.text_recognized.connect(self.on_text_recognized)
-        self.processor.text_processed.connect(self.on_text_processed)
-
+        
         self.text_buffer = ""
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_display)
-        self.update_timer.start(100) 
-        
+        self.update_timer.start(100)  # Cập nhật mỗi 100ms
+
+        self.app.aboutToQuit.connect(self.cleanup)
+
     def run(self):
         self.main_window.start_button.clicked.connect(self.start_voice_typing)
         self.main_window.stop_button.clicked.connect(self.stop_voice_typing)
@@ -37,17 +38,17 @@ class VoiceTypingApp:
         self.main_window.stop_recognition()
 
     def on_text_recognized(self, text):
-        self.text_buffer += text + " "
-        self.processor.process_async(self.text_buffer)
-
-    def on_text_processed(self, processed_text):
-        self.text_buffer = processed_text
+        processed_text = self.processor.process_text(text)
+        self.text_buffer += processed_text + " "
 
     def update_display(self):
         if self.text_buffer:
             self.main_window.update_recognized_text(self.text_buffer)
             self.controller.type_text(self.text_buffer)
             self.text_buffer = ""
+
+    def cleanup(self):
+        self.recognizer.cleanup()
 
 if __name__ == "__main__":
     voice_typing_app = VoiceTypingApp()
