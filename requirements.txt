@@ -1,0 +1,5 @@
+PyQt5==5.15.6
+SpeechRecognition==3.8.1
+pyaudio==0.2.11
+nltk==3.6.5
+PyAutoGUI==0.9.53
