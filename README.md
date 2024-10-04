@@ -21,6 +21,36 @@ Dự án được chia thành các thành phần chính sau:
 
 ## Cấu trúc dự án
 
+
+
+VoiceTyping/
+│
+├── src/
+│ ├── gui/
+│ │ ├── init.py
+│ │ └── main_window.py
+│ ├── speech_recognition/
+│ │ ├── init.py
+│ │ └── recognizer.py
+│ ├── text_processing/
+│ │ ├── init.py
+│ │ └── processor.py
+│ ├── input_control/
+│ │ ├── init.py
+│ │ └── controller.py
+│ └── main.py
+│
+├── tests/
+│ ├── test_gui.py
+│ ├── test_speech_recognition.py
+│ ├── test_text_processing.py
+│ └── test_input_control.py
+│
+├── requirements.txt
+├── setup.py
+├── README.md
+└── .gitignore
+
 ## Cài đặt và Sử dụng
 
 (Hướng dẫn cài đặt và sử dụng sẽ được thêm vào sau)
