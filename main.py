@@ -25,6 +25,7 @@ class VoiceTypingApp:
         if recognized_text:
             processed_text = self.processor.process_text(recognized_text)
             self.controller.type_text(processed_text)
+            self.main_window.update_recognized_text(processed_text)
             self.main_window.status_label.setText("Trạng thái: Đã nhập văn bản")
         else:
             self.main_window.status_label.setText("Trạng thái: Không nhận diện được giọng nói")
