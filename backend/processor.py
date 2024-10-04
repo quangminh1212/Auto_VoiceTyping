@@ -1,21 +1,22 @@
 import nltk
-nltk.download('punkt')
+from PyQt5.QtCore import QThread, pyqtSignal
 
-class TextProcessor:
+class TextProcessor(QThread):
+    text_processed = pyqtSignal(str)
+
     def __init__(self):
-        pass
+        super().__init__()
+        nltk.download('punkt', quiet=True)
 
     def process_text(self, text):
-        # Tách câu
         sentences = nltk.sent_tokenize(text)
-        
-        # Xử lý từng câu
-        processed_sentences = []
-        for sentence in sentences:
-            # Viết hoa chữ cái đầu câu
-            processed_sentence = sentence.capitalize()
-            processed_sentences.append(processed_sentence)
-        
-        # Kết hợp các câu đã xử lý
-        processed_text = ' '.join(processed_sentences)
-        return processed_text
+        processed_sentences = [sentence.capitalize() for sentence in sentences]
+        return ' '.join(processed_sentences)
+
+    def run(self):
+        processed_text = self.process_text(self.input_text)
+        self.text_processed.emit(processed_text)
+
+    def process_async(self, text):
+        self.input_text = text
+        self.start()
