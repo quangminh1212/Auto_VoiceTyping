@@ -7,7 +7,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("VoiceTyping")
         self.setFixedSize(400, 200)  # Tăng chiều cao để chứa text display lớn hơn
-        self.setWindowIcon(QIcon("logo.png"))  # Add your logo file here
+        self.setWindowIcon(QIcon("logo.ico"))  # Sử dụng file logo.ico
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #2E2E2E;
@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
         button_layout.addWidget(self.start_button)
 
         self.stop_button = QPushButton("Stop")
-        self.stop_button.setIcon(QIcon("stop_icon.png"))
+        self.stop_button.setIcon(QIcon("stop_icon.png")) 
         self.stop_button.setIconSize(QSize(20, 20))
         self.stop_button.clicked.connect(self.stop_recognition)
         self.stop_button.setEnabled(False)
