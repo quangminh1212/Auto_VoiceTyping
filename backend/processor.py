@@ -7,22 +7,22 @@ class TextProcessor(QObject):
     def __init__(self):
         super().__init__()
         nltk.download('punkt', quiet=True)
+        self.previous_text = ""
 
     def process_text(self, text):
-        # Tách câu
-        sentences = nltk.sent_tokenize(text)
-        
-        # Xử lý từng câu
-        processed_sentences = []
-        for sentence in sentences:
-            # Loại bỏ khoảng trắng thừa
-            sentence = ' '.join(sentence.split())
-            # Viết hoa chữ cái đầu câu
-            sentence = sentence.capitalize()
-            processed_sentences.append(sentence)
-        
-        # Kết hợp các câu đã xử lý
-        processed_text = ' '.join(processed_sentences)
+        # Loại bỏ các từ trùng lặp
+        words = text.split()
+        unique_words = []
+        for word in words:
+            if not unique_words or word != unique_words[-1]:
+                unique_words.append(word)
+        processed_text = " ".join(unique_words)
+
+        # Chỉ giữ lại phần văn bản mới
+        if self.previous_text and processed_text.startswith(self.previous_text):
+            processed_text = processed_text[len(self.previous_text):].strip()
+
+        self.previous_text = text
         return processed_text
 
     def process_async(self, text):

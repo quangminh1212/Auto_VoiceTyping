@@ -1,6 +1,30 @@
+import os
+import sys
+from pydub import AudioSegment
 import speech_recognition as sr
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 import time
+import warnings
+
+# Chỉ định đường dẫn đến FFmpeg
+ffmpeg_path = r"C:\ffmpeg\bin"
+
+# Thêm đường dẫn FFmpeg vào PATH
+if ffmpeg_path not in os.environ["PATH"]:
+    os.environ["PATH"] = ffmpeg_path + os.pathsep + os.environ["PATH"]
+
+# Cấu hình pydub
+AudioSegment.converter = os.path.join(ffmpeg_path, "ffmpeg.exe")
+AudioSegment.ffmpeg = os.path.join(ffmpeg_path, "ffmpeg.exe")
+AudioSegment.ffprobe = os.path.join(ffmpeg_path, "ffprobe.exe")
+
+# Kiểm tra xem FFmpeg có tồn tại không
+if not os.path.exists(AudioSegment.converter):
+    print(f"Không tìm thấy FFmpeg tại {AudioSegment.converter}")
+    sys.exit(1)
+
+# Tắt cảnh báo từ pydub
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="pydub.utils")
 
 class SpeechRecognizer(QObject):
     text_recognized = pyqtSignal(str)
@@ -8,7 +32,6 @@ class SpeechRecognizer(QObject):
     def __init__(self):
         super().__init__()
         self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
         self.is_listening = False
         self.thread = None
 
@@ -33,19 +56,31 @@ class ListeningThread(QThread):
         self.recognizer = recognizer
 
     def run(self):
-        with self.recognizer.microphone as source:
+        with sr.Microphone() as source:
             self.recognizer.recognizer.adjust_for_ambient_noise(source, duration=1)
+            self.recognizer.recognizer.dynamic_energy_threshold = True
+            self.recognizer.recognizer.energy_threshold = 300
+            self.recognizer.recognizer.pause_threshold = 0.8
             
             while self.recognizer.is_listening:
                 try:
-                    audio = self.recognizer.recognizer.listen(source, timeout=10, phrase_time_limit=5)
-                    text = self.recognizer.recognizer.recognize_google(audio, language="vi-VN")
-                    self.recognizer.text_recognized.emit(text)
+                    print("Đang lắng nghe...")
+                    audio = self.recognizer.recognizer.listen(source, timeout=5, phrase_time_limit=10)
+                    self.process_audio(audio)
                 except sr.WaitTimeoutError:
-                    pass
-                except sr.UnknownValueError:
-                    print("Không thể nhận diện giọng nói")
-                except sr.RequestError as e:
-                    print(f"Lỗi khi yêu cầu kết quả từ Google Speech Recognition; {e}")
-                
+                    print("Hết thời gian chờ, tiếp tục lắng nghe...")
+                except Exception as e:
+                    print(f"Lỗi: {e}")
                 time.sleep(0.1)
+
+    def process_audio(self, audio):
+        print("Đã ghi âm, đang xử lý...")
+        try:
+            text = self.recognizer.recognizer.recognize_google(audio, language="vi-VN")
+            print(f"Văn bản nhận diện: {text}")
+            self.recognizer.text_recognized.emit(text.strip())
+        except sr.UnknownValueError:
+            print("Không thể nhận diện giọng nói")
+        except sr.RequestError as e:
+            print(f"Lỗi khi yêu cầu kết quả từ Google Speech Recognition; {e}")
+

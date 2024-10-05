@@ -1,4 +1,5 @@
 # VoiceTyping
+venv\Scripts\activate
 
 VoiceTyping là một ứng dụng máy tính cho phép người dùng nhập văn bản bằng giọng nói tại vị trí con trỏ chuột, sử dụng công nghệ nhận dạng giọng nói của Google Docs.
 
