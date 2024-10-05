@@ -96,12 +96,20 @@ class MainWindow(QMainWindow):
     def update_recognized_text(self, text):
         current_text = self.text_display.toPlainText()
         lines = current_text.split('\n')
+        
+        # Giữ lại tối đa 2 dòng
         if len(lines) >= 2:
             lines = lines[-1:]  # Giữ lại dòng cuối cùng
         lines.append(text)
+        
         new_text = '\n'.join(lines[-2:])  # Chỉ giữ 2 dòng cuối cùng
         self.text_display.setText(new_text)
-        self.text_display.moveCursor(QTextCursor.End)  # Di chuyển con trỏ đến cuối
+        
+        # Di chuyển con trỏ đến cuối văn bản
+        cursor = self.text_display.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        self.text_display.setTextCursor(cursor)
+        self.text_display.ensureCursorVisible()
 
 if __name__ == "__main__":
     app = QApplication([])
