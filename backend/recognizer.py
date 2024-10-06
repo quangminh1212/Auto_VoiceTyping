@@ -61,15 +61,15 @@ class ListeningThread(QThread):
 
     def run(self):
         with sr.Microphone() as source:
-            self.recognizer.recognizer.adjust_for_ambient_noise(source, duration=1)
+            self.recognizer.recognizer.adjust_for_ambient_noise(source, duration=0.5)
             self.recognizer.recognizer.dynamic_energy_threshold = True
             self.recognizer.recognizer.energy_threshold = 300
-            self.recognizer.recognizer.pause_threshold = 0.8
+            self.recognizer.recognizer.pause_threshold = 0.5
             
             while self.recognizer.is_listening:
                 try:
                     print("Đang lắng nghe...")
-                    audio = self.recognizer.recognizer.listen(source, timeout=5, phrase_time_limit=10)
+                    audio = self.recognizer.recognizer.listen(source, timeout=5, phrase_time_limit=5)
                     self.process_audio(audio)
                 except sr.WaitTimeoutError:
                     print("Hết thời gian chờ, tiếp tục lắng nghe...")
@@ -82,7 +82,7 @@ class ListeningThread(QThread):
         try:
             text = self.recognizer.recognizer.recognize_google(audio, language="vi-VN")
             print(f"Văn bản nhận diện: {text}")
-            self.recognizer.text_recognized.emit(text.strip())
+            self.recognizer.text_recognized.emit(text)
         except sr.UnknownValueError:
             print("Không thể nhận diện giọng nói")
         except sr.RequestError as e:

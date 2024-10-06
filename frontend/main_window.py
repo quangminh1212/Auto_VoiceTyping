@@ -8,7 +8,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("VoiceTyping")
-        self.setFixedSize(300, 400)
+        self.setFixedSize(300, 100)  # Giảm chiều cao xuống
         self.setWindowIcon(QIcon("logo.ico"))
         
         self.setup_dark_theme()
@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         self.input_controller = InputController()
         self.recognizer = SpeechRecognizer()
         self.input_controller.ctrl_pressed.connect(self.on_ctrl_pressed)
-        self.recognizer.text_recognized.connect(self.update_recognized_text)
+        self.recognizer.text_recognized.connect(self.input_controller.type_text)
 
     def setup_dark_theme(self):
         palette = QPalette()
@@ -51,19 +51,6 @@ class MainWindow(QMainWindow):
         """)
         self.toggle_button.clicked.connect(self.toggle_recognition)
         layout.addWidget(self.toggle_button)
-
-        self.text_display = QTextEdit()
-        self.text_display.setReadOnly(True)
-        self.text_display.setStyleSheet("""
-            QTextEdit {
-                background-color: #2d2d2d;
-                color: white;
-                border: none;
-                padding: 10px;
-                font-size: 14px;
-            }
-        """)
-        layout.addWidget(self.text_display)
 
     def toggle_recognition(self):
         if self.toggle_button.text() == "Start":
@@ -111,11 +98,16 @@ class MainWindow(QMainWindow):
         """)
         self.recognizer.stop_listening()
 
-    def update_recognized_text(self, text):
-        self.text_display.append(text)
-        QApplication.processEvents()  # Cập nhật giao diện người dùng
-        self.input_controller.type_text(text + " ")
-        QTimer.singleShot(100, lambda: self.text_display.ensureCursorVisible())
+
+    def toggle_display(self):
+        self.is_display_expanded = not self.is_display_expanded
+        if self.is_display_expanded:
+            self.text_display.setFixedHeight(300)
+            self.toggle_display_button.setText("Thu gọn")
+        else:
+            self.text_display.setFixedHeight(100)
+            self.toggle_display_button.setText("Mở rộng")
+        self.adjustSize()
 
 if __name__ == "__main__":
     app = QApplication([])

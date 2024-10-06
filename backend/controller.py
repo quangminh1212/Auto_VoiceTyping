@@ -11,15 +11,21 @@ class InputController(QObject):
         super().__init__()
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_ctrl_state)
-        self.timer.start(100)  # Kiểm tra mỗi 100ms
+        self.timer.start(10)  # Kiểm tra mỗi 10ms
+        self.last_ctrl_state = False
 
     def type_text(self, text):
-        # Sử dụng pyperclip để copy văn bản vào clipboard
+        QTimer.singleShot(100, lambda: self._type_text(text))
+
+    def _type_text(self, text):
         pyperclip.copy(text)
-        # Sử dụng pyautogui để mô phỏng tổ hợp phím Ctrl+V
         pyautogui.hotkey('ctrl', 'v')
         print(f"Đã nhập văn bản: {text}")
+        time.sleep(0.1)
 
     def check_ctrl_state(self):
         is_pressed = keyboard.is_pressed('ctrl')
-        self.ctrl_pressed.emit(is_pressed)
+        if is_pressed != self.last_ctrl_state:
+            self.last_ctrl_state = is_pressed
+            self.ctrl_pressed.emit(is_pressed)
+
