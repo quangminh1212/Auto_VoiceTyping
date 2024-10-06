@@ -21,8 +21,11 @@ class TextProcessor(QObject):
         # Chỉ giữ lại phần văn bản mới
         if self.previous_text and processed_text.startswith(self.previous_text):
             processed_text = processed_text[len(self.previous_text):].strip()
+        else:
+            self.previous_text = ""  # Reset previous_text nếu không có sự trùng lặp
 
-        self.previous_text = text
+        self.previous_text += " " + processed_text
+        self.previous_text = self.previous_text.strip()
         return processed_text
 
     def process_async(self, text):
