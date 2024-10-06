@@ -5,6 +5,7 @@ import speech_recognition as sr
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 import time
 import warnings
+import keyboard
 
 # Chỉ định đường dẫn đến FFmpeg
 ffmpeg_path = r"C:\ffmpeg\bin"
@@ -49,6 +50,9 @@ class SpeechRecognizer(QObject):
 
     def cleanup(self):
         self.stop_listening()
+
+    def is_ctrl_pressed(self):
+        return keyboard.is_pressed('ctrl')
 
 class ListeningThread(QThread):
     def __init__(self, recognizer):
