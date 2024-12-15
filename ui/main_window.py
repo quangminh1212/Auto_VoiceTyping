@@ -6,17 +6,12 @@ from PyQt6.QtGui import QFont, QKeySequence
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
         super().__init__()
-        self.auth = auth
-        self.docs_controller = docs_controller
-        self.text_manager = text_manager
-        self.system_interaction = system_interaction
-        self.state_store = state_store
-
-        # Khởi tạo timer cho việc ghi âm
-        self.recording_timer = QTimer()
-        self.recording_timer.timeout.connect(self.update_timer)
-        self.recording_seconds = 0
-
+        # Cache các đối tượng thường xuyên sử dụng
+        self._cached_text = ""
+        self._last_recording_time = 0
+        
+        # Khởi tạo các thành phần
+        self.init_components(auth, docs_controller, text_manager, system_interaction, state_store)
         self.init_ui()
 
     def init_ui(self):
@@ -162,3 +157,58 @@ class MainWindow(QMainWindow):
         minutes = self.recording_seconds // 60
         seconds = self.recording_seconds % 60
         self.status_label.setText(f"Đang ghi âm: {minutes:02d}:{seconds:02d}")
+
+    def check_microphone(self):
+        try:
+            devices = self.system_interaction.get_audio_devices()
+            if not devices:
+                QMessageBox.warning(self, "Cảnh báo", "Không tìm thấy microphone")
+                return False
+            return True
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", f"Lỗi kiểm tra microphone: {str(e)}")
+            return False
+
+    def show_progress(self, message="Đang xử lý..."):
+        self.progress_bar.setValue(0)
+        self.progress_bar.show()
+        self.status_label.setText(message)
+        
+        for i in range(0, 101, 20):
+            QTimer.singleShot(i * 20, lambda v=i: self.progress_bar.setValue(v))
+
+    def save_settings(self):
+        try:
+            settings = {
+                'window_geometry': self.geometry().getRect(),
+                'last_used_device': self.system_interaction.get_current_device()
+            }
+            self.state_store.set_state('settings', settings)
+        except Exception as e:
+            print(f"Lỗi khi lưu cấu hình: {str(e)}")
+
+    def closeEvent(self, event):
+        try:
+            if self.state_store.get_state('is_recording'):
+                self.stop_recording()
+            self.save_settings()
+            event.accept()
+        except Exception as e:
+            print(f"Lỗi khi đóng ứng dụng: {str(e)}")
+
+    def check_for_updates(self):
+        try:
+            version = self.system_interaction.get_latest_version()
+            current_version = "1.0.0"  # Cần cập nhật theo version thực tế
+            if version > current_version:
+                QMessageBox.information(self, "Cập nhật", 
+                    "Có phiên bản mới. Vui lòng cập nhật để có trải nghiệm tốt nhất.")
+        except Exception as e:
+            print(f"Lỗi kiểm tra cập nhật: {str(e)}")
+
+    def eventFilter(self, obj, event):
+        if event.type() == Qt.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Escape:
+                self.stop_recording()
+                return True
+        return super().eventFilter(obj, event)
