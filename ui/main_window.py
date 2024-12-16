@@ -1,17 +1,29 @@
 from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, QWidget, 
-                           QMessageBox, QLabel, QProgressBar)
+                           QMessageBox, QLabel, QShortcut, QProgressBar)
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont, QKeySequence, QShortcut
 
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
         super().__init__()
+        
+        # Khởi tạo các thuộc tính
+        self.auth = auth
+        self.docs_controller = docs_controller
+        self.text_manager = text_manager
+        self.system_interaction = system_interaction
+        self.state_store = state_store
+
+        # Khởi tạo timer
+        self.recording_timer = QTimer()
+        self.recording_timer.timeout.connect(self.update_timer)
+        self.recording_seconds = 0
+        
         # Cache các đối tượng thường xuyên sử dụng
         self._cached_text = ""
         self._last_recording_time = 0
         
-        # Khởi tạo các thành phần
-        self.init_components(auth, docs_controller, text_manager, system_interaction, state_store)
+        # Khởi tạo UI
         self.init_ui()
 
     def init_ui(self):
