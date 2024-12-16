@@ -1,3 +1,10 @@
+"""
+Voice Typing Application
+Author: Bach Gia
+Email: wuangming12@gmail.com
+Version: 1.0.0
+"""
+
 from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, QWidget, 
                            QMessageBox, QLabel, QProgressBar, QTextEdit, QApplication)
 from PyQt6.QtCore import QTimer, Qt
@@ -40,6 +47,12 @@ class MainWindow(QMainWindow):
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         layout = QVBoxLayout()
+
+        # Thêm thông tin tác giả
+        author_label = QLabel('Voice Typing by Bach Gia (wuangming12@gmail.com)')
+        author_label.setStyleSheet('color: #666; font-size: 10px; padding: 5px;')
+        author_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(author_label)
 
         # Text display area
         self.text_display = QTextEdit()
@@ -163,6 +176,12 @@ class MainWindow(QMainWindow):
 
 # Thêm hàm main để chạy trực tiếp
 def main():
+    print("\n=== VOICE TYPING APP ===")
+    print("Author: Bach Gia")
+    print("Email: wuangming12@gmail.com")
+    print("Version: 1.0.0")
+    print("\nĐang khởi tạo...")
+    
     app = QApplication(sys.argv)
     
     # Khởi tạo các dependencies
