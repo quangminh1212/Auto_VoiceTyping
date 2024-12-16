@@ -149,18 +149,24 @@ class MainWindow(QMainWindow):
             self.progress_bar.setValue(50)
             
             text = self.docs_controller.get_text()
-            self.system_interaction.paste_text(text)
-            
-            self.progress_bar.setValue(100)
-            self.status_label.setText("Trạng thái: Sẵn sàng")
-            QMessageBox.information(self, "Thông báo", "Đã dán văn bản")
-            
-            # Ẩn thanh tiến trình sau 1 giây
-            QTimer.singleShot(1000, self.progress_bar.hide)
+            if text:
+                print(f"Text chuẩn bị paste: [{text}]")
+                success = self.system_interaction.paste_text(text)
+                
+                if success:
+                    self.progress_bar.setValue(100)
+                    self.status_label.setText("Đã paste thành công!")
+                    QMessageBox.information(self, "Thông báo", f"Đã paste văn bản:\n{text}")
+                else:
+                    raise Exception("Không thể paste văn bản")
+            else:
+                QMessageBox.information(self, "Thông báo", "Chưa có văn bản nào để paste")
+                
         except Exception as e:
-            self.status_label.setText("Trạng thái: Lỗi")
+            self.status_label.setText("Lỗi khi paste")
+            QMessageBox.critical(self, "Lỗi", f"Không thể paste văn bản: {str(e)}")
+        finally:
             self.progress_bar.hide()
-            QMessageBox.critical(self, "Lỗi", f"Không thể dán văn bản: {str(e)}")
 
     def preview_text(self):
         try:
