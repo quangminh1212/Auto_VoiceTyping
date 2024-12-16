@@ -144,14 +144,13 @@ class MainWindow(QMainWindow):
 
     def paste_text(self):
         try:
-            # Hiển thị trạng thái đang xử lý
             self.status_label.setText("Đang xử lý...")
             self.progress_bar.show()
             self.progress_bar.setValue(30)
             
-            # Lấy text từ docs controller
             text = self.docs_controller.get_text()
-            print(f"Attempting to paste text: [{text}]")
+            print(f"=== ĐANG DÁN VĂN BẢN ===")
+            print(f"Text cần dán: [{text}]")
             
             if text and text.strip():
                 self.progress_bar.setValue(60)
@@ -160,6 +159,8 @@ class MainWindow(QMainWindow):
                 if self.system_interaction.paste_text(text):
                     self.progress_bar.setValue(100)
                     self.status_label.setText("Đã paste thành công!")
+                    
+                    # Hiển thị thông báo thành công
                     QMessageBox.information(self, "Thành công", 
                         f"Đã copy văn bản vào clipboard:\n\n{text}")
                 else:
@@ -181,19 +182,20 @@ class MainWindow(QMainWindow):
 
     def preview_text(self):
         try:
-            # Lấy text hiện tại từ audio service thông qua docs controller
             text = self.docs_controller.get_text()
-            print(f"Preview text: [{text}]")
+            print(f"=== XEM TRƯỚC VĂN BẢN ===")
+            print(f"Text hiện tại: [{text}]")
             
             if text and text.strip():
-                QMessageBox.information(self, "Xem trước văn bản", 
-                    f"Văn bản đã ghi:\n\n{text}")
+                # Hiển thị dialog với text đã format
+                formatted_text = f"Văn bản đã ghi:\n\n{text}"
+                QMessageBox.information(self, "Xem trước văn bản", formatted_text)
             else:
                 QMessageBox.information(self, "Thông báo", 
-                    "Chưa có văn bản nào được ghi.\nHãy bắt đầu ghi âm trước!")
+                    "Chưa có văn bản nào.\nHãy bắt đầu ghi âm và nói vào microphone!")
                 
         except Exception as e:
-            print(f"Lỗi khi xem trước văn bản: {str(e)}")
+            print(f"Lỗi xem trước văn bản: {str(e)}")
             QMessageBox.critical(self, "Lỗi", f"Không thể xem trước văn bản: {str(e)}")
 
     def update_timer(self):
