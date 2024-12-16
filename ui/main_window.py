@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, QWidget, 
-                           QMessageBox, QLabel, QShortcut, QProgressBar)
+                           QMessageBox, QLabel, QProgressBar)
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QFont, QKeySequence
+from PyQt6.QtGui import QFont, QKeySequence, QShortcut
 
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
