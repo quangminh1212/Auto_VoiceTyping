@@ -14,10 +14,15 @@ class MainWindow(QMainWindow):
         self.system_interaction = system_interaction
         self.state_store = state_store
 
-        # Khởi tạo timer
+        # Khởi tạo timer cho ghi âm
         self.recording_timer = QTimer()
         self.recording_timer.timeout.connect(self.update_timer)
         self.recording_seconds = 0
+        
+        # Khởi tạo timer cho cập nhật text
+        self.text_update_timer = QTimer()
+        self.text_update_timer.timeout.connect(self.update_text_display)
+        self.text_update_timer.setInterval(500)  # Cập nhật mỗi 500ms
         
         # Cache các đối tượng thường xuyên sử dụng
         self._cached_text = ""
@@ -128,9 +133,11 @@ class MainWindow(QMainWindow):
                 self.docs_controller.start_voice_typing()
                 self.recording_seconds = 0
                 self.recording_timer.start(1000)
+                self.text_update_timer.start()  # Bắt đầu cập nhật text
                 self.status_label.setText("Đang ghi âm: 00:00")
                 self.progress_bar.show()
-                self.text_display.setText("Đang ghi âm...")
+                self.text_display.clear()
+                self.text_display.setPlaceholderText("Đang lắng nghe...")
                 
         except Exception as e:
             QMessageBox.critical(self, "Lỗi", f"Không thể bắt đầu ghi âm: {str(e)}")
@@ -141,6 +148,7 @@ class MainWindow(QMainWindow):
                 self.state_store.set_state('is_recording', False)
                 text = self.docs_controller.stop_voice_typing()
                 self.recording_timer.stop()
+                self.text_update_timer.stop()
                 self.status_label.setText("Trạng thái: Sẵn sàng")
                 self.progress_bar.hide()
                 
@@ -198,7 +206,7 @@ class MainWindow(QMainWindow):
                 
         except Exception as e:
             print(f"Lỗi khi xem trước văn bản: {str(e)}")
-            QMessageBox.critical(self, "Lỗi", f"Không thể xem trước văn bản: {str(e)}")
+            QMessageBox.critical(self, "Lỗi", f"Không thể xem tr��ớc văn bản: {str(e)}")
 
     def update_timer(self):
         self.recording_seconds += 1
@@ -260,6 +268,17 @@ class MainWindow(QMainWindow):
                 self.stop_recording()
                 return True
         return super().eventFilter(obj, event)
+
+    def update_text_display(self):
+        """Cập nhật text display theo realtime"""
+        try:
+            current_text = self.docs_controller.get_text()
+            if current_text and current_text.strip():
+                self.text_display.setText(current_text)
+                # Tự động cuộn xuống
+                self.text_display.moveCursor(self.text_display.textCursor().End)
+        except Exception as e:
+            print(f"Lỗi cập nhật text display: {str(e)}")
 
 if __name__ == '__main__':
     import sys
