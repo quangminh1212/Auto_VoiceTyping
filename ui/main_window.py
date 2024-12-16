@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, QWidget, 
-                           QMessageBox, QLabel, QShortcut, QProgressBar)
+                           QMessageBox, QLabel, QProgressBar)
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont, QKeySequence, QShortcut
 
