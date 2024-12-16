@@ -114,12 +114,16 @@ class MainWindow(QMainWindow):
     def start_recording(self):
         try:
             if not self.state_store.get_state('is_recording'):
+                if not self.check_microphone():
+                    return
+                
                 self.state_store.set_state('is_recording', True)
                 self.docs_controller.start_voice_typing()
                 self.recording_seconds = 0
                 self.recording_timer.start(1000)
                 self.status_label.setText("Đang ghi âm: 00:00")
-                QMessageBox.information(self, "Thông báo", "Bắt đầu ghi âm")
+                self.progress_bar.show()
+                
         except Exception as e:
             QMessageBox.critical(self, "Lỗi", f"Không thể bắt đầu ghi âm: {str(e)}")
 
@@ -127,10 +131,14 @@ class MainWindow(QMainWindow):
         try:
             if self.state_store.get_state('is_recording'):
                 self.state_store.set_state('is_recording', False)
-                self.docs_controller.stop_voice_typing()
+                text = self.docs_controller.stop_voice_typing()
                 self.recording_timer.stop()
                 self.status_label.setText("Trạng thái: Sẵn sàng")
-                QMessageBox.information(self, "Thông báo", "Dừng ghi âm")
+                self.progress_bar.hide()
+                
+                if text:
+                    QMessageBox.information(self, "Thông báo", f"Đã ghi âm xong:\n{text}")
+                
         except Exception as e:
             QMessageBox.critical(self, "Lỗi", f"Không thể dừng ghi âm: {str(e)}")
 
