@@ -144,38 +144,56 @@ class MainWindow(QMainWindow):
 
     def paste_text(self):
         try:
+            # Hiển thị trạng thái đang xử lý
             self.status_label.setText("Đang xử lý...")
             self.progress_bar.show()
-            self.progress_bar.setValue(50)
+            self.progress_bar.setValue(30)
             
+            # Lấy text từ docs controller
             text = self.docs_controller.get_text()
-            if text:
-                print(f"Text chuẩn bị paste: [{text}]")
-                success = self.system_interaction.paste_text(text)
+            print(f"Attempting to paste text: [{text}]")
+            
+            if text and text.strip():
+                self.progress_bar.setValue(60)
                 
-                if success:
+                # Thực hiện paste
+                if self.system_interaction.paste_text(text):
                     self.progress_bar.setValue(100)
                     self.status_label.setText("Đã paste thành công!")
-                    QMessageBox.information(self, "Thông báo", f"Đã paste văn bản:\n{text}")
+                    QMessageBox.information(self, "Thành công", 
+                        f"Đã copy văn bản vào clipboard:\n\n{text}")
                 else:
                     raise Exception("Không thể paste văn bản")
             else:
-                QMessageBox.information(self, "Thông báo", "Chưa có văn bản nào để paste")
+                QMessageBox.information(self, "Thông báo", 
+                    "Chưa có văn bản nào để paste.\nHãy ghi âm trước!")
                 
         except Exception as e:
+            print(f"Lỗi khi paste văn bản: {str(e)}")
             self.status_label.setText("Lỗi khi paste")
             QMessageBox.critical(self, "Lỗi", f"Không thể paste văn bản: {str(e)}")
+            
         finally:
-            self.progress_bar.hide()
+            # Ẩn progress bar sau 1 giây
+            QTimer.singleShot(1000, self.progress_bar.hide)
+            # Reset status sau 2 giây
+            QTimer.singleShot(2000, lambda: self.status_label.setText("Trạng thái: Sẵn sàng"))
 
     def preview_text(self):
         try:
+            # Lấy text hiện tại từ audio service thông qua docs controller
             text = self.docs_controller.get_text()
-            if text:
-                QMessageBox.information(self, "Xem trước văn bản", text)
+            print(f"Preview text: [{text}]")
+            
+            if text and text.strip():
+                QMessageBox.information(self, "Xem trước văn bản", 
+                    f"Văn bản đã ghi:\n\n{text}")
             else:
-                QMessageBox.information(self, "Thông báo", "Chưa có văn bản nào được ghi")
+                QMessageBox.information(self, "Thông báo", 
+                    "Chưa có văn bản nào được ghi.\nHãy bắt đầu ghi âm trước!")
+                
         except Exception as e:
+            print(f"Lỗi khi xem trước văn bản: {str(e)}")
             QMessageBox.critical(self, "Lỗi", f"Không thể xem trước văn bản: {str(e)}")
 
     def update_timer(self):
