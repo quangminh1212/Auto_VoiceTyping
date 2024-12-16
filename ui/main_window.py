@@ -1,7 +1,18 @@
 from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, QWidget, 
-                           QMessageBox, QLabel, QProgressBar, QTextEdit)
+                           QMessageBox, QLabel, QProgressBar, QTextEdit, QApplication)
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont, QTextCursor
+import sys
+import os
+
+# Thêm thư mục gốc vào PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from services.audio_service import AudioService
+from controllers.docs_controller import DocsController
+from utils.text_manager import TextManager
+from utils.system_interaction import SystemInteraction
+from utils.state_store import StateStore
 
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
@@ -149,3 +160,27 @@ class MainWindow(QMainWindow):
         minutes = self.recording_seconds // 60
         seconds = self.recording_seconds % 60
         self.status_label.setText(f"Đang ghi âm: {minutes:02d}:{seconds:02d}")
+
+# Thêm hàm main để chạy trực tiếp
+def main():
+    app = QApplication(sys.argv)
+    
+    # Khởi tạo các dependencies
+    auth = None  # Tạm thời không cần auth
+    docs_controller = DocsController()
+    text_manager = TextManager()
+    system_interaction = SystemInteraction()
+    state_store = StateStore()
+    
+    # Khởi tạo main window
+    window = MainWindow(auth, docs_controller, text_manager, system_interaction, state_store)
+    window.show()
+    
+    print("\n=== VOICE TYPING APP STARTED ===")
+    print("Đang khởi tạo các thành phần...")
+    print("Sẵn sàng ghi âm!")
+    
+    sys.exit(app.exec())
+
+if __name__ == '__main__':
+    main()
