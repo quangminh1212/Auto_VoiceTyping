@@ -146,39 +146,27 @@ class MainWindow(QMainWindow):
         try:
             self.status_label.setText("Đang xử lý...")
             self.progress_bar.show()
-            self.progress_bar.setValue(30)
+            self.progress_bar.setValue(50)
             
             text = self.docs_controller.get_text()
-            print(f"=== ĐANG DÁN VĂN BẢN ===")
-            print(f"Text cần dán: [{text}]")
-            
-            if text and text.strip():
-                self.progress_bar.setValue(60)
+            if text:
+                print(f"Text chuẩn bị paste: [{text}]")
+                success = self.system_interaction.paste_text(text)
                 
-                # Thực hiện paste
-                if self.system_interaction.paste_text(text):
+                if success:
                     self.progress_bar.setValue(100)
                     self.status_label.setText("Đã paste thành công!")
-                    
-                    # Hiển thị thông báo thành công
-                    QMessageBox.information(self, "Thành công", 
-                        f"Đã copy văn bản vào clipboard:\n\n{text}")
+                    QMessageBox.information(self, "Thông báo", f"Đã paste văn bản:\n{text}")
                 else:
                     raise Exception("Không thể paste văn bản")
             else:
-                QMessageBox.information(self, "Thông báo", 
-                    "Chưa có văn bản nào để paste.\nHãy ghi âm trước!")
+                QMessageBox.information(self, "Thông báo", "Chưa có văn bản nào để paste")
                 
         except Exception as e:
-            print(f"Lỗi khi paste văn bản: {str(e)}")
             self.status_label.setText("Lỗi khi paste")
             QMessageBox.critical(self, "Lỗi", f"Không thể paste văn bản: {str(e)}")
-            
         finally:
-            # Ẩn progress bar sau 1 giây
-            QTimer.singleShot(1000, self.progress_bar.hide)
-            # Reset status sau 2 giây
-            QTimer.singleShot(2000, lambda: self.status_label.setText("Trạng thái: Sẵn sàng"))
+            self.progress_bar.hide()
 
     def preview_text(self):
         try:
