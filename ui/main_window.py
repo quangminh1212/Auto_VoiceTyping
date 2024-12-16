@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, QWidget, 
-                           QMessageBox, QLabel, QProgressBar)
+                           QMessageBox, QLabel, QProgressBar, QTextEdit)
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont, QKeySequence, QShortcut
 
@@ -56,6 +56,13 @@ class MainWindow(QMainWindow):
         title_label.setFont(QFont('Arial', 24, QFont.Weight.Bold))
         title_label.setStyleSheet("color: #FFA500; margin-bottom: 10px;")
         main_layout.addWidget(title_label)
+
+        # Thêm text edit để hiển thị văn bản
+        self.text_display = QTextEdit()
+        self.text_display.setReadOnly(True)  # Chỉ cho phép đọc
+        self.text_display.setMinimumHeight(100)
+        self.text_display.setPlaceholderText("Văn bản sẽ hiển thị ở đây...")
+        main_layout.addWidget(self.text_display)
 
         # Thanh tiến trình
         self.progress_bar = QProgressBar()
@@ -123,6 +130,7 @@ class MainWindow(QMainWindow):
                 self.recording_timer.start(1000)
                 self.status_label.setText("Đang ghi âm: 00:00")
                 self.progress_bar.show()
+                self.text_display.setText("Đang ghi âm...")
                 
         except Exception as e:
             QMessageBox.critical(self, "Lỗi", f"Không thể bắt đầu ghi âm: {str(e)}")
@@ -137,7 +145,10 @@ class MainWindow(QMainWindow):
                 self.progress_bar.hide()
                 
                 if text:
-                    QMessageBox.information(self, "Thông báo", f"Đã ghi âm xong:\n{text}")
+                    self.text_display.setText(text)
+                    print(f"Đã ghi âm được: [{text}]")
+                    QMessageBox.information(self, "Thành công", 
+                        f"Đã ghi âm xong:\n\n{text}")
                 
         except Exception as e:
             QMessageBox.critical(self, "Lỗi", f"Không thể dừng ghi âm: {str(e)}")
@@ -175,15 +186,18 @@ class MainWindow(QMainWindow):
             print(f"Text hiện tại: [{text}]")
             
             if text and text.strip():
-                # Hiển thị dialog với text đã format
-                formatted_text = f"Văn bản đã ghi:\n\n{text}"
-                QMessageBox.information(self, "Xem trước văn bản", formatted_text)
+                # Hiển thị text trong text edit
+                self.text_display.setText(text)
+                # Hiển thị dialog xem trước
+                QMessageBox.information(self, "Xem trước văn bản", 
+                    f"Văn bản đã ghi:\n\n{text}")
             else:
+                self.text_display.setText("Chưa có văn bản nào được ghi")
                 QMessageBox.information(self, "Thông báo", 
-                    "Chưa có văn bản nào.\nHãy bắt đầu ghi âm và nói vào microphone!")
+                    "Chưa có văn bản nào được ghi.\nHãy thử ghi âm trước!")
                 
         except Exception as e:
-            print(f"Lỗi xem trước văn bản: {str(e)}")
+            print(f"Lỗi khi xem trước văn bản: {str(e)}")
             QMessageBox.critical(self, "Lỗi", f"Không thể xem trước văn bản: {str(e)}")
 
     def update_timer(self):
