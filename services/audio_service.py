@@ -5,73 +5,90 @@ import time
 class AudioService:
     def __init__(self):
         self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
+        # Chọn microphone mặc định
+        try:
+            self.microphone = sr.Microphone(device_index=None)
+            print(f"Danh sách microphone: {sr.Microphone.list_microphone_names()}")
+        except Exception as e:
+            print(f"Lỗi khởi tạo microphone: {str(e)}")
+        
         self.is_recording = False
         self.current_text = ""
         self.recording_thread = None
 
-        # Điều chỉnh các thông số để tăng độ nhạy
-        self.recognizer.energy_threshold = 300  # Giảm ngưỡng để dễ nhận diện hơn
-        self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.pause_threshold = 0.3
-        self.recognizer.phrase_threshold = 0.1
-        self.recognizer.non_speaking_duration = 0.1
+        # Điều chỉnh các thông số nhận dạng
+        self.recognizer.energy_threshold = 100  # Giảm ngưỡng xuống thấp nhất
+        self.recognizer.dynamic_energy_threshold = False  # Tắt dynamic threshold
+        self.recognizer.pause_threshold = 0.3  # Giảm thời gian pause
+        self.recognizer.phrase_threshold = 0.1  # Giảm ngưỡng phrase
+        self.recognizer.non_speaking_duration = 0.1  # Giảm thời gian non-speaking
 
     def _record_audio(self):
         try:
             with self.microphone as source:
-                print("Điều chỉnh nhiễu môi trường trong 2s...")
-                self.recognizer.adjust_for_ambient_noise(source, duration=2)
+                print("\n=== KHỞI TẠO MICROPHONE ===")
+                print("Điều chỉnh nhiễu môi trường...")
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)
                 print("Đã điều chỉnh xong - Bắt đầu nghe...")
                 
                 while self.is_recording:
                     try:
-                        print("Đang lắng nghe (nói gì đó vào mic)...")
-                        audio = self.recognizer.listen(source, timeout=2, phrase_time_limit=5)
+                        print("\nĐang lắng nghe... (Hãy nói gì đó)")
+                        audio = self.recognizer.listen(source, 
+                                                     timeout=2,
+                                                     phrase_time_limit=5)
                         print("Đã thu âm, đang xử lý...")
                         
-                        # Thử nhận dạng với nhiều ngôn ngữ
+                        # Thử nhận dạng với cả tiếng Việt và tiếng Anh
+                        text = None
                         for lang in ['vi-VN', 'en-US']:
                             try:
                                 text = self.recognizer.recognize_google(audio, language=lang)
                                 print(f"Đã nhận dạng được ({lang}): [{text}]")
-                                self.current_text += text + " "
-                                print(f"Text tích lũy: [{self.current_text}]")
                                 break
-                            except:
+                            except sr.UnknownValueError:
+                                print(f"Không nhận dạng được với {lang}")
+                                continue
+                            except Exception as e:
+                                print(f"Lỗi nhận dạng với {lang}: {str(e)}")
                                 continue
                                 
+                        if text:
+                            self.current_text += text + " "
+                            print(f"Text tích lũy: [{self.current_text}]")
+                        else:
+                            print("Không nhận dạng được giọng nói, thử lại...")
+                            
                     except sr.WaitTimeoutError:
                         print("Không nghe thấy gì - đang tiếp tục...")
                         continue
-                    except sr.UnknownValueError:
-                        print("Không nhận dạng được - thử lại...")
-                        continue
                     except Exception as e:
-                        print(f"Lỗi xử lý âm thanh: {str(e)}")
-                        time.sleep(0.1)  # Tránh loop quá nhanh
+                        print(f"Lỗi trong quá trình ghi âm: {str(e)}")
+                        time.sleep(0.1)
                         continue
                         
         except Exception as e:
-            print(f"Lỗi microphone: {str(e)}")
+            print(f"Lỗi critical với microphone: {str(e)}")
         finally:
-            print("Kết thúc ghi âm")
+            print("\n=== KẾT THÚC GHI ÂM ===")
             self.is_recording = False
 
     def start_recording(self):
         if not self.is_recording:
+            print("\n=== BẮT ĐẦU PHIÊN GHI ÂM MỚI ===")
             self.current_text = ""  # Reset text
             self.is_recording = True
             self.recording_thread = threading.Thread(target=self._record_audio)
-            self.recording_thread.daemon = True  # Đảm bảo thread sẽ dừng khi chương trình dừng
+            self.recording_thread.daemon = True
             self.recording_thread.start()
-            print("Đã bắt đầu thread ghi âm")
+            return True
+        return False
 
     def stop_recording(self):
-        print("Đang dừng ghi âm...")
+        print("\n=== DỪNG GHI ÂM ===")
         self.is_recording = False
         if self.recording_thread and self.recording_thread.is_alive():
-            self.recording_thread.join(timeout=2)  # Đợi tối đa 2s
+            self.recording_thread.join(timeout=2)
         final_text = self.current_text.strip()
         print(f"Text cuối cùng: [{final_text}]")
         return final_text
