@@ -5,11 +5,9 @@ Email: wuangming12@gmail.com
 Version: 1.0.0
 """
 
-from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, QWidget, 
-                           QMessageBox, QLabel, QProgressBar, QTextEdit, QApplication,
-                           QHBoxLayout, QComboBox, QSpinBox, QCheckBox)
+from PyQt6.QtWidgets import *
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QFont, QTextCursor, QIcon
+from PyQt6.QtGui import QFont, QTextCursor, QIcon, QPalette, QColor
 import sys
 import os
 
@@ -21,15 +19,36 @@ from utils.text_manager import TextManager
 from utils.system_interaction import SystemInteraction
 from utils.state_store import StateStore
 
+# Dark theme colors
+DARK_THEME = {
+    'bg': '#1e1e1e',
+    'text': '#ffffff',
+    'accent': '#00ff9d',
+    'secondary': '#383838',
+    'error': '#ff5555',
+    'success': '#50fa7b',
+    'warning': '#ffb86c'
+}
+
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
         super().__init__()
+        self.setWindowTitle('Voice Typing - Dark Mode')
+        
+        # Initialize components
+        self.setup_components(auth, docs_controller, text_manager, system_interaction, state_store)
+        self.init_ui()
+        self.load_settings()
+        self.apply_dark_theme()
+
+    def setup_components(self, auth, docs_controller, text_manager, system_interaction, state_store):
         self.auth = auth
         self.docs_controller = docs_controller
         self.text_manager = text_manager
         self.system_interaction = system_interaction
         self.state_store = state_store
 
+        # Setup timers
         self.recording_timer = QTimer()
         self.recording_timer.timeout.connect(self.update_timer)
         self.recording_seconds = 0
@@ -39,8 +58,58 @@ class MainWindow(QMainWindow):
         self.text_update_timer.setInterval(100)
         
         self.last_text = ""
-        self.init_ui()
-        self.load_settings()
+
+    def apply_dark_theme(self):
+        # Set application style
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {DARK_THEME['bg']};
+                color: {DARK_THEME['text']};
+            }}
+            QWidget {{
+                background-color: {DARK_THEME['bg']};
+                color: {DARK_THEME['text']};
+            }}
+            QTextEdit {{
+                background-color: {DARK_THEME['secondary']};
+                color: {DARK_THEME['text']};
+                border: 2px solid {DARK_THEME['accent']};
+                border-radius: 10px;
+                padding: 15px;
+                selection-background-color: {DARK_THEME['accent']};
+                selection-color: {DARK_THEME['bg']};
+            }}
+            QPushButton {{
+                background-color: {DARK_THEME['accent']};
+                color: {DARK_THEME['text']};
+                font-size: 13px;
+                font-weight: bold;
+                border-radius: 5px;
+            }}
+            QPushButton:hover {{
+                opacity: 0.8;
+            }}
+            QPushButton:disabled {{
+                background-color: {DARK_THEME['secondary']};
+            }}
+            QComboBox {{
+                padding: 5px;
+                border: 1px solid {DARK_THEME['accent']};
+                border-radius: 5px;
+                min-width: 150px;
+            }}
+            QProgressBar {{
+                border: 1px solid {DARK_THEME['accent']};
+                border-radius: 5px;
+                text-align: center;
+            }}
+            QProgressBar::chunk {{
+                background-color: {DARK_THEME['accent']};
+            }}
+            QLabel {{
+                color: {DARK_THEME['text']};
+            }}
+        """)
 
     def init_ui(self):
         main_widget = QWidget()
