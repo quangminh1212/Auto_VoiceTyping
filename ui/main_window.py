@@ -212,3 +212,70 @@ class MainWindow(QMainWindow):
                 self.stop_recording()
                 return True
         return super().eventFilter(obj, event)
+
+if __name__ == '__main__':
+    import sys
+    from PyQt6.QtWidgets import QApplication
+
+    # Mock classes cho việc test trực tiếp
+    class MockAuth:
+        def check_auth(self):
+            return True
+
+    class MockDocsController:
+        def start_voice_typing(self):
+            print("Bắt đầu ghi âm...")
+        
+        def stop_voice_typing(self):
+            print("Dừng ghi âm...")
+        
+        def get_text(self):
+            return "Đây là văn bản test từ voice typing"
+
+    class MockTextManager:
+        def process_text(self, text):
+            return text
+
+    class MockSystemInteraction:
+        def get_audio_devices(self):
+            return ["Microphone (Default)"]
+            
+        def get_current_device(self):
+            return "Microphone (Default)"
+            
+        def paste_text(self, text):
+            print(f"Đang dán văn bản: {text}")
+
+    class MockStateStore:
+        def __init__(self):
+            self._state = {'is_recording': False}
+            
+        def get_state(self, key):
+            return self._state.get(key, False)
+            
+        def set_state(self, key, value):
+            self._state[key] = value
+            print(f"State {key} được cập nhật: {value}")
+
+    # Khởi tạo ứng dụng
+    app = QApplication(sys.argv)
+    
+    # Khởi tạo các mock objects
+    auth = MockAuth()
+    docs_controller = MockDocsController()
+    text_manager = MockTextManager()
+    system_interaction = MockSystemInteraction()
+    state_store = MockStateStore()
+    
+    # Tạo và hiển thị cửa sổ chính
+    window = MainWindow(
+        auth=auth,
+        docs_controller=docs_controller,
+        text_manager=text_manager,
+        system_interaction=system_interaction,
+        state_store=state_store
+    )
+    window.show()
+    
+    # Chạy ứng dụng
+    sys.exit(app.exec())
