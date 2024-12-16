@@ -9,49 +9,61 @@ class AudioService:
         self.is_recording = False
         self.current_text = ""
         self.recording_thread = None
-        # Điều chỉnh các thông số nhận dạng
-        self.recognizer.energy_threshold = 4000  # Tăng độ nhạy
+
+        # Tăng các thông số nhận dạng
+        self.recognizer.energy_threshold = 1000  # Giảm ngưỡng năng lượng để dễ nhận diện hơn
         self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.pause_threshold = 0.8  # Giảm thời gian pause
+        self.recognizer.pause_threshold = 0.5  # Giảm thời gian pause
+        self.recognizer.phrase_threshold = 0.3  # Giảm ngưỡng phrase
+        self.recognizer.non_speaking_duration = 0.3  # Giảm thời gian non-speaking
 
     def _record_audio(self):
         try:
             with self.microphone as source:
-                print("Điều chỉnh độ ồn môi trường...")
-                self.recognizer.adjust_for_ambient_noise(source, duration=2)
-                print("Bắt đầu ghi âm - Hãy nói...")
+                print("Đang điều chỉnh nhiễu môi trường...")
+                # Tăng thời gian điều chỉnh nhiễu
+                self.recognizer.adjust_for_ambient_noise(source, duration=3)
+                print("Đã điều chỉnh xong - Bắt đầu nghe...")
                 
                 while self.is_recording:
                     try:
                         print("Đang lắng nghe...")
-                        audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=10)
-                        print("Đang xử lý âm thanh...")
+                        # Giảm timeout và phrase_time_limit để nhận diện nhanh hơn
+                        audio = self.recognizer.listen(source, timeout=2, phrase_time_limit=5)
+                        print("Đã nghe thấy - Đang xử lý...")
                         
-                        text = self.recognizer.recognize_google(audio, language='vi-VN')
-                        print(f"Đã nhận dạng: [{text}]")
+                        # Thử nhận dạng với cả 2 ngôn ngữ
+                        try:
+                            text = self.recognizer.recognize_google(audio, language='vi-VN')
+                        except:
+                            text = self.recognizer.recognize_google(audio, language='en-US')
+                            
+                        print(f"Đã nhận dạng được: [{text}]")
                         
                         if text:
                             self.current_text += text + " "
                             print(f"Text hiện tại: [{self.current_text}]")
                             
                     except sr.WaitTimeoutError:
-                        print("Timeout - không nghe thấy gì")
+                        print("Không nghe thấy gì - tiếp tục nghe...")
                         continue
                     except sr.UnknownValueError:
-                        print("Không nhận dạng được giọng nói")
+                        print("Không nhận dạng được - thử lại...")
                         continue
                     except Exception as e:
-                        print(f"Lỗi trong quá trình ghi âm: {str(e)}")
+                        print(f"Lỗi khi xử lý âm thanh: {str(e)}")
                         continue
                         
         except Exception as e:
-            print(f"Lỗi khởi tạo microphone: {str(e)}")
+            print(f"Lỗi microphone: {str(e)}")
         finally:
             print("Kết thúc ghi âm")
             self.is_recording = False
 
     def start_recording(self):
         if not self.is_recording:
+            # Reset text khi bắt đầu ghi âm mới
+            self.current_text = ""
             self.is_recording = True
             self.recording_thread = threading.Thread(target=self._record_audio)
             self.recording_thread.start()
@@ -70,4 +82,5 @@ class AudioService:
         return self.current_text.strip()
 
     def clear_text(self):
-        self.current_text = "" 
+        self.current_text = ""
+  
