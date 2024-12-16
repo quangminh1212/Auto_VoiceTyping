@@ -6,14 +6,19 @@ Version: 1.0.0
 """
 
 import sys
-from PyQt6.QtWidgets import QApplication
+import os
 
-from ui.main_window import MainWindow
-from services.audio_service import AudioService
-from controllers.docs_controller import DocsController
-from utils.text_manager import TextManager
-from utils.system_interaction import SystemInteraction
-from utils.state_store import StateStore
+# Thêm đường dẫn src vào PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.ui.main_window import MainWindow
+from src.services.audio_service import AudioService
+from src.controllers.docs_controller import DocsController
+from src.utils.text_manager import TextManager
+from src.utils.system_interaction import SystemInteraction
+from src.utils.state_store import StateStore
+
+from PyQt6.QtWidgets import QApplication
 
 def main():
     print("\n=== VOICE TYPING APP - DARK MODE ===")
