@@ -4,17 +4,20 @@ import time
 
 class AudioService:
     def __init__(self):
-        self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
-        self.is_recording = False
-        self.current_text = ""
-        self.recording_thread = None
-
-        # In ra danh sách microphone để kiểm tra
-        print("\n=== DANH SÁCH MICROPHONE ===")
-        mics = sr.Microphone.list_microphone_names()
-        for i, mic in enumerate(mics):
-            print(f"{i}: {mic}")
+        try:
+            self.recognizer = sr.Recognizer()
+            self.microphone = sr.Microphone()
+            self.is_recording = False
+            self.current_text = ""
+            self.recording_thread = None
+            
+            # Test PyAudio
+            with self.microphone as source:
+                print("Kiểm tra microphone thành công!")
+                
+        except Exception as e:
+            print(f"Lỗi khởi tạo AudioService: {str(e)}")
+            raise
 
     def _record_audio(self):
         with self.microphone as source:
