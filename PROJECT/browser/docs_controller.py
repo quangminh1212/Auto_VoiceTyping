@@ -8,10 +8,17 @@ from googleapiclient.errors import HttpError
 
 class DocsController:
     def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        self.driver = webdriver.Chrome(options=chrome_options)
+        self.chrome_options = Options()
+        self.chrome_options.add_argument("--headless")
+        self.chrome_options.add_argument("--disable-gpu")
+        self.chrome_options.add_argument("--no-sandbox")
+        self.chrome_options.add_argument("--disable-dev-shm-usage")
+        self.driver = None
         self.service = None
+    
+    def initialize_browser(self):
+        if not self.driver:
+            self.driver = webdriver.Chrome(options=self.chrome_options)
     
     def open_docs(self):
         self.driver.get("https://docs.google.com/document/create")

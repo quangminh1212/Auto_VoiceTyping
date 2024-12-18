@@ -6,7 +6,16 @@ import os
 class GoogleAuth:
     def __init__(self):
         self.credentials = None
-        self.scopes = ['https://www.googleapis.com/auth/documents.readonly']
+        self.scopes = [
+            'https://www.googleapis.com/auth/documents.readonly',
+            'https://www.googleapis.com/auth/drive.file'
+        ]
+        self.token_file = 'token.json'
+        
+    def load_saved_credentials(self):
+        if os.path.exists(self.token_file):
+            return Credentials.from_authorized_user_file(self.token_file, self.scopes)
+        return None
     
     def authenticate(self):
         if not self.credentials or not self.credentials.valid:

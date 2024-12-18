@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 from PyQt6.QtGui import QFont, QIcon
 from PyQt6.QtCore import Qt
+from PROJECT.auth.google_auth import setup_logger
 
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
@@ -10,8 +11,22 @@ class MainWindow(QMainWindow):
         self.text_manager = text_manager
         self.system_interaction = system_interaction
         self.state_store = state_store
-
+        self.logger = setup_logger()
+        
+        # Initialize browser when starting
+        self.docs_controller.initialize_browser()
+        
+        # Setup error handling
+        self.setup_error_handling()
+        
         self.init_ui()
+
+    def setup_error_handling(self):
+        try:
+            self.auth.authenticate()
+        except Exception as e:
+            self.logger.error(f"Authentication failed: {str(e)}")
+            # Handle error appropriately
 
     def init_ui(self):
         self.setWindowTitle("VoiceTyping")
