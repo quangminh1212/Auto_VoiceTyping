@@ -5,18 +5,28 @@ import time
 class AudioService:
     def __init__(self):
         try:
+            # Kiểm tra PyAudio
+            import pyaudio
+            print("PyAudio đã được cài đặt thành công!")
+            
             self.recognizer = sr.Recognizer()
             self.microphone = sr.Microphone()
             self.is_recording = False
             self.current_text = ""
             self.recording_thread = None
             
-            # Test PyAudio
+            # Test microphone
             with self.microphone as source:
-                print("Kiểm tra microphone thành công!")
+                print("\nKiểm tra microphone...")
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)
+                print("Microphone hoạt động tốt!")
                 
+        except ImportError:
+            print("\nLỗi: Chưa cài đặt PyAudio")
+            print("Vui lòng chạy lệnh: python -m pip install PyAudio-0.2.11-cp312-cp312-win_amd64.whl")
+            raise
         except Exception as e:
-            print(f"Lỗi khởi tạo AudioService: {str(e)}")
+            print(f"\nLỗi khởi tạo AudioService: {str(e)}")
             raise
 
     def _record_audio(self):
