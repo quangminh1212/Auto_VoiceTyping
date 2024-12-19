@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 from PyQt6.QtGui import QFont, QIcon
 from PyQt6.QtCore import Qt
-from PROJECT.auth.google_auth import setup_logger
+from utils.logger import setup_logger
 
 class MainWindow(QMainWindow):
     def __init__(self, auth, docs_controller, text_manager, system_interaction, state_store):
