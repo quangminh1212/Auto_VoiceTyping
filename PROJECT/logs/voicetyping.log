@@ -215,3 +215,29 @@ Stacktrace:
 	RtlInitializeExceptionChain [0x776EC0CB+107]
 	RtlClearBits [0x776EC04F+191]
 
+2024-12-19 23:00:50,808 - voicetyping - ERROR - Browser initialization failed: Message: session not created: Chrome failed to start: exited normally.
+  (session not created: DevToolsActivePort file doesn't exist)
+  (The process started from chrome location C:\Program Files\Google\Chrome\Application\chrome.exe is no longer running, so ChromeDriver is assuming that Chrome has crashed.)
+Stacktrace:
+	GetHandleVerifier [0x010DEC13+23731]
+	(No symbol) [0x0106C394]
+	(No symbol) [0x00F4BE63]
+	(No symbol) [0x00F7B432]
+	(No symbol) [0x00F770F9]
+	(No symbol) [0x00FBB449]
+	(No symbol) [0x00FBAC0A]
+	(No symbol) [0x00FB1BF6]
+	(No symbol) [0x00F83F35]
+	(No symbol) [0x00F84EBD]
+	GetHandleVerifier [0x013BF0D3+3039603]
+	GetHandleVerifier [0x013D2DEA+3120778]
+	GetHandleVerifier [0x013CB592+3089970]
+	GetHandleVerifier [0x011743B0+635984]
+	(No symbol) [0x01074DCD]
+	(No symbol) [0x01072068]
+	(No symbol) [0x01072205]
+	(No symbol) [0x01064FD0]
+	BaseThreadInitThunk [0x75817BA9+25]
+	RtlInitializeExceptionChain [0x776EC0CB+107]
+	RtlClearBits [0x776EC04F+191]
+
