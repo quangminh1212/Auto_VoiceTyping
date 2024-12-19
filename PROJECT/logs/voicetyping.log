@@ -1,3 +1,52 @@
 2024-12-19 08:35:26,577 - voicetyping - ERROR - Authentication failed: [Errno 2] No such file or directory: 'client_secret.json'
 2024-12-19 08:35:26,577 - voicetyping - ERROR - Authentication failed: [Errno 2] No such file or directory: 'client_secret.json'
 2024-12-19 19:42:31,243 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-19 20:00:30,887 - voicetyping - ERROR - Failed to open Google Docs: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF79FBCFB05+28789]
+	(No symbol) [0x00007FF79FB386E0]
+	(No symbol) [0x00007FF79F9D592A]
+	(No symbol) [0x00007FF79FA2930E]
+	(No symbol) [0x00007FF79FA295FC]
+	(No symbol) [0x00007FF79FA728A7]
+	(No symbol) [0x00007FF79FA4F47F]
+	(No symbol) [0x00007FF79FA6F654]
+	(No symbol) [0x00007FF79FA4F1E3]
+	(No symbol) [0x00007FF79FA1A938]
+	(No symbol) [0x00007FF79FA1BAA1]
+	GetHandleVerifier [0x00007FF79FF0933D+3410093]
+	GetHandleVerifier [0x00007FF79FF1E7DD+3497293]
+	GetHandleVerifier [0x00007FF79FF12A73+3448803]
+	GetHandleVerifier [0x00007FF79FC97BBB+848171]
+	(No symbol) [0x00007FF79FB43C3F]
+	(No symbol) [0x00007FF79FB3F6E4]
+	(No symbol) [0x00007FF79FB3F87D]
+	(No symbol) [0x00007FF79FB2ED49]
+	BaseThreadInitThunk [0x00007FF8C0E5259D+29]
+	RtlUserThreadStart [0x00007FF8C30CAF38+40]
+
+2024-12-19 20:00:30,889 - voicetyping - ERROR - Failed to initialize browser: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF79FBCFB05+28789]
+	(No symbol) [0x00007FF79FB386E0]
+	(No symbol) [0x00007FF79F9D592A]
+	(No symbol) [0x00007FF79FA2930E]
+	(No symbol) [0x00007FF79FA295FC]
+	(No symbol) [0x00007FF79FA728A7]
+	(No symbol) [0x00007FF79FA4F47F]
+	(No symbol) [0x00007FF79FA6F654]
+	(No symbol) [0x00007FF79FA4F1E3]
+	(No symbol) [0x00007FF79FA1A938]
+	(No symbol) [0x00007FF79FA1BAA1]
+	GetHandleVerifier [0x00007FF79FF0933D+3410093]
+	GetHandleVerifier [0x00007FF79FF1E7DD+3497293]
+	GetHandleVerifier [0x00007FF79FF12A73+3448803]
+	GetHandleVerifier [0x00007FF79FC97BBB+848171]
+	(No symbol) [0x00007FF79FB43C3F]
+	(No symbol) [0x00007FF79FB3F6E4]
+	(No symbol) [0x00007FF79FB3F87D]
+	(No symbol) [0x00007FF79FB2ED49]
+	BaseThreadInitThunk [0x00007FF8C0E5259D+29]
+	RtlUserThreadStart [0x00007FF8C30CAF38+40]
+
+2024-12-19 20:00:34,636 - voicetyping - INFO - Browser closed
