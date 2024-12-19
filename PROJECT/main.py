@@ -1,6 +1,7 @@
 import sys
 import io
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import Qt
 from ui.main_window import MainWindow
 from auth.google_auth import GoogleAuth
 from browser.docs_controller import DocsController
@@ -27,12 +28,15 @@ def initialize_components():
     return logger, auth, docs_controller, text_manager, system_interaction, state_store
 
 def main():
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
+    
     app = QApplication(sys.argv)
     
     components = initialize_components()
     if components:
         logger, auth, docs_controller, text_manager, system_interaction, state_store = components
-        logger.info("Khởi động ứng dụng VoiceTyping")
+        logger.info("Starting VoiceTyping application")
         
         main_window = MainWindow(auth, docs_controller, text_manager, system_interaction, state_store)
         main_window.show()

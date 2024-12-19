@@ -54,7 +54,9 @@ class MainWindow(QMainWindow):
         title_label.setStyleSheet("""
             color: #ECF0F1;
             margin-bottom: 30px;
-            text-shadow: 2px 2px 4px #000000;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px;
         """)
         main_layout.addWidget(title_label)
 
