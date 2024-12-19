@@ -241,3 +241,6 @@ Stacktrace:
 	RtlInitializeExceptionChain [0x776EC0CB+107]
 	RtlClearBits [0x776EC04F+191]
 
+2024-12-19 23:07:50,877 - voicetyping - INFO - Browser initialized successfully
+2024-12-19 23:07:50,877 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-19 23:08:35,235 - voicetyping - INFO - Browser closed successfully
