@@ -50,3 +50,6 @@ Stacktrace:
 	RtlUserThreadStart [0x00007FF8C30CAF38+40]
 
 2024-12-19 20:00:34,636 - voicetyping - INFO - Browser closed
+2024-12-19 20:07:19,899 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-19 20:07:27,394 - voicetyping - INFO - Google Docs opened successfully
+2024-12-19 20:07:27,395 - voicetyping - INFO - Browser initialized successfully
