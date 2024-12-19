@@ -7,6 +7,6 @@ webdriver-manager>=4.0.0
 pyautogui>=0.9.54
 rxpy>=0.1.0
 cryptography>=41.0.0
-structlog>=23.1.0
+structlog>=23.1.0feat: enhance UI and add error handling with auto-save feature
 SpeechRecognition>=3.10.0
 keyboard>=0.13.5
