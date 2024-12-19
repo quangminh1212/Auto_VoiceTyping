@@ -53,3 +53,32 @@ Stacktrace:
 2024-12-19 20:07:19,899 - voicetyping - INFO - Starting VoiceTyping application
 2024-12-19 20:07:27,394 - voicetyping - INFO - Google Docs opened successfully
 2024-12-19 20:07:27,395 - voicetyping - INFO - Browser initialized successfully
+2024-12-19 21:20:29,396 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-19 21:20:46,626 - voicetyping - INFO - Google Docs opened successfully
+2024-12-19 21:20:46,626 - voicetyping - INFO - Browser initialized successfully
+2024-12-19 21:21:07,194 - voicetyping - ERROR - Failed to start voice typing: Message: 
+Stacktrace:
+	GetHandleVerifier [0x0092EC13+23731]
+	(No symbol) [0x008BC394]
+	(No symbol) [0x0079BE63]
+	(No symbol) [0x007DFCE6]
+	(No symbol) [0x007DFF2B]
+	(No symbol) [0x0081D892]
+	(No symbol) [0x00801EA4]
+	(No symbol) [0x0081B46E]
+	(No symbol) [0x00801BF6]
+	(No symbol) [0x007D3F35]
+	(No symbol) [0x007D4EBD]
+	GetHandleVerifier [0x00C0F0D3+3039603]
+	GetHandleVerifier [0x00C22DEA+3120778]
+	GetHandleVerifier [0x00C1B592+3089970]
+	GetHandleVerifier [0x009C43B0+635984]
+	(No symbol) [0x008C4DCD]
+	(No symbol) [0x008C2068]
+	(No symbol) [0x008C2205]
+	(No symbol) [0x008B4FD0]
+	BaseThreadInitThunk [0x75817BA9+25]
+	RtlInitializeExceptionChain [0x776EC0CB+107]
+	RtlClearBits [0x776EC04F+191]
+
+2024-12-19 21:25:49,205 - voicetyping - INFO - Browser closed successfully

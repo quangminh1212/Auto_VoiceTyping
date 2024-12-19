@@ -19,15 +19,18 @@ class DocsController:
         
     def setup_chrome_options(self):
         self.chrome_options = Options()
-        self.chrome_options.add_argument("--headless=new")  # Sử dụng headless mới
+        self.chrome_options.add_argument("--headless=new")
         self.chrome_options.add_argument("--disable-gpu")
         self.chrome_options.add_argument("--no-sandbox")
         self.chrome_options.add_argument("--disable-dev-shm-usage")
         self.chrome_options.add_argument("--window-size=1920,1080")
-        self.chrome_options.add_argument("--remote-debugging-port=9222")
         self.chrome_options.add_argument("--disable-extensions")
         self.chrome_options.add_argument("--disable-notifications")
         self.chrome_options.add_argument("--disable-infobars")
+        self.chrome_options.add_argument("--log-level=3")
+        self.chrome_options.add_argument("--silent")
+        self.chrome_options.add_argument("--disable-logging")
+        self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         
         # Thêm user agent
         self.chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -59,7 +62,7 @@ class DocsController:
     def open_docs(self):
         try:
             self.driver.get("https://docs.google.com")
-            # Đợi cho trang load xong
+            # Đ��i cho trang load xong
             WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )

@@ -1,5 +1,7 @@
 import sys
 import io
+import os
+import warnings
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from ui.main_window import MainWindow
@@ -10,12 +12,12 @@ from system.interaction import SystemInteraction
 from state.store import StateStore
 from utils.logger import setup_logger
 from config.config import Config
-from utils.error_handler import handle_errors
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+# Tắt các cảnh báo không cần thiết
+warnings.filterwarnings('ignore')
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Tắt TensorFlow warnings
+os.environ['QT_LOGGING_RULES'] = '*.debug=false;qt.qpa.*=false'
 
-@handle_errors
 def initialize_components():
     Config.setup_directories()
     logger = setup_logger()
@@ -28,13 +30,18 @@ def initialize_components():
     return logger, auth, docs_controller, text_manager, system_interaction, state_store
 
 def main():
-    # Set DPI awareness
+    # Thiết lập DPI
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     
+    # Thiết lập môi trường
+    os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+    os.environ['QT_SCALE_FACTOR'] = '1'
+    
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')  # Sử dụng style Fusion cho giao diện nhất quán
     
     components = initialize_components()
     if components:
