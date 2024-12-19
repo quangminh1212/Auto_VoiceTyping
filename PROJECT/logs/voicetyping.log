@@ -82,3 +82,82 @@ Stacktrace:
 	RtlClearBits [0x776EC04F+191]
 
 2024-12-19 21:25:49,205 - voicetyping - INFO - Browser closed successfully
+2024-12-19 22:35:52,957 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-19 22:35:58,499 - voicetyping - INFO - Google Docs opened successfully
+2024-12-19 22:35:58,499 - voicetyping - INFO - Browser initialized successfully
+2024-12-19 22:36:19,039 - voicetyping - ERROR - Failed to start voice typing: Message: 
+Stacktrace:
+	GetHandleVerifier [0x010DEC13+23731]
+	(No symbol) [0x0106C394]
+	(No symbol) [0x00F4BE63]
+	(No symbol) [0x00F8FCE6]
+	(No symbol) [0x00F8FF2B]
+	(No symbol) [0x00FCD892]
+	(No symbol) [0x00FB1EA4]
+	(No symbol) [0x00FCB46E]
+	(No symbol) [0x00FB1BF6]
+	(No symbol) [0x00F83F35]
+	(No symbol) [0x00F84EBD]
+	GetHandleVerifier [0x013BF0D3+3039603]
+	GetHandleVerifier [0x013D2DEA+3120778]
+	GetHandleVerifier [0x013CB592+3089970]
+	GetHandleVerifier [0x011743B0+635984]
+	(No symbol) [0x01074DCD]
+	(No symbol) [0x01072068]
+	(No symbol) [0x01072205]
+	(No symbol) [0x01064FD0]
+	BaseThreadInitThunk [0x75817BA9+25]
+	RtlInitializeExceptionChain [0x776EC0CB+107]
+	RtlClearBits [0x776EC04F+191]
+
+2024-12-19 22:36:46,524 - voicetyping - ERROR - Failed to stop voice typing: Message: 
+Stacktrace:
+	GetHandleVerifier [0x010DEC13+23731]
+	(No symbol) [0x0106C394]
+	(No symbol) [0x00F4BE63]
+	(No symbol) [0x00F8FCE6]
+	(No symbol) [0x00F8FF2B]
+	(No symbol) [0x00FCD892]
+	(No symbol) [0x00FB1EA4]
+	(No symbol) [0x00FCB46E]
+	(No symbol) [0x00FB1BF6]
+	(No symbol) [0x00F83F35]
+	(No symbol) [0x00F84EBD]
+	GetHandleVerifier [0x013BF0D3+3039603]
+	GetHandleVerifier [0x013D2DEA+3120778]
+	GetHandleVerifier [0x013CB592+3089970]
+	GetHandleVerifier [0x011743B0+635984]
+	(No symbol) [0x01074DCD]
+	(No symbol) [0x01072068]
+	(No symbol) [0x01072205]
+	(No symbol) [0x01064FD0]
+	BaseThreadInitThunk [0x75817BA9+25]
+	RtlInitializeExceptionChain [0x776EC0CB+107]
+	RtlClearBits [0x776EC04F+191]
+
+2024-12-19 22:37:29,800 - voicetyping - ERROR - Failed to get text: Message: 
+Stacktrace:
+	GetHandleVerifier [0x010DEC13+23731]
+	(No symbol) [0x0106C394]
+	(No symbol) [0x00F4BE63]
+	(No symbol) [0x00F8FCE6]
+	(No symbol) [0x00F8FF2B]
+	(No symbol) [0x00FCD892]
+	(No symbol) [0x00FB1EA4]
+	(No symbol) [0x00FCB46E]
+	(No symbol) [0x00FB1BF6]
+	(No symbol) [0x00F83F35]
+	(No symbol) [0x00F84EBD]
+	GetHandleVerifier [0x013BF0D3+3039603]
+	GetHandleVerifier [0x013D2DEA+3120778]
+	GetHandleVerifier [0x013CB592+3089970]
+	GetHandleVerifier [0x011743B0+635984]
+	(No symbol) [0x01074DCD]
+	(No symbol) [0x01072068]
+	(No symbol) [0x01072205]
+	(No symbol) [0x01064FD0]
+	BaseThreadInitThunk [0x75817BA9+25]
+	RtlInitializeExceptionChain [0x776EC0CB+107]
+	RtlClearBits [0x776EC04F+191]
+
+2024-12-19 22:37:42,396 - voicetyping - INFO - Browser closed successfully

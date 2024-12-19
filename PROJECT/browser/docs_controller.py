@@ -6,163 +6,172 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
-from googleapiclient.discovery import build
 import logging
-import os
+import time
+from threading import Lock
 
 class DocsController:
     def __init__(self):
         self.logger = logging.getLogger('voicetyping')
-        self.setup_chrome_options()
         self.driver = None
-        self.service = None
+        self.lock = Lock()
+        self.is_initialized = False
+        self.setup_chrome_options()
         
     def setup_chrome_options(self):
         self.chrome_options = Options()
-        self.chrome_options.add_argument("--headless=new")
-        self.chrome_options.add_argument("--disable-gpu")
-        self.chrome_options.add_argument("--no-sandbox")
-        self.chrome_options.add_argument("--disable-dev-shm-usage")
-        self.chrome_options.add_argument("--window-size=1920,1080")
-        self.chrome_options.add_argument("--disable-extensions")
-        self.chrome_options.add_argument("--disable-notifications")
-        self.chrome_options.add_argument("--disable-infobars")
-        self.chrome_options.add_argument("--log-level=3")
-        self.chrome_options.add_argument("--silent")
-        self.chrome_options.add_argument("--disable-logging")
-        self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         
-        # Thêm user agent
-        self.chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    
-    def initialize_browser(self):
-        try:
-            if self.driver:
-                return
+        # Performance optimizations
+        self.chrome_options.add_argument('--disable-gpu')
+        self.chrome_options.add_argument('--disable-software-rasterizer')
+        self.chrome_options.add_argument('--disable-dev-shm-usage')
+        self.chrome_options.add_argument('--no-sandbox')
+        self.chrome_options.add_argument('--disable-extensions')
+        self.chrome_options.add_argument('--disable-logging')
+        self.chrome_options.add_argument('--disable-notifications')
+        self.chrome_options.add_argument('--disable-default-apps')
+        self.chrome_options.add_argument('--disable-popup-blocking')
+        
+        # Memory optimizations
+        self.chrome_options.add_argument('--js-flags=--expose-gc')
+        self.chrome_options.add_argument('--single-process')
+        self.chrome_options.add_argument('--disable-application-cache')
+        self.chrome_options.add_argument('--aggressive-cache-discard')
+        self.chrome_options.add_argument('--disable-offline-load-stale-cache')
+        
+        # Network optimizations
+        self.chrome_options.add_argument('--dns-prefetch-disable')
+        self.chrome_options.add_argument('--no-proxy-server')
+        
+        # Headless mode optimizations
+        self.chrome_options.add_argument('--headless=new')
+        self.chrome_options.add_argument('--window-size=1920,1080')
+        
+        # Additional performance settings
+        self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.chrome_options.add_experimental_option('prefs', {
+            'profile.default_content_setting_values.notifications': 2,
+            'profile.managed_default_content_settings.images': 2,
+            'profile.managed_default_content_settings.javascript': 1
+        })
 
-            # Sử dụng webdriver_manager để tự động tải ChromeDriver
-            service = Service(ChromeDriverManager().install())
-            self.driver = webdriver.Chrome(service=service, options=self.chrome_options)
-            
-            # Thiết lập timeout mặc định
-            self.driver.implicitly_wait(10)
-            self.driver.set_script_timeout(30)
-            self.driver.set_page_load_timeout(30)
-            
-            self.open_docs()
-            self.logger.info("Browser initialized successfully")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to initialize browser: {str(e)}")
-            if self.driver:
-                self.driver.quit()
-                self.driver = None
-            raise Exception(f"Could not initialize Chrome browser: {str(e)}")
-    
-    def open_docs(self):
-        try:
-            self.driver.get("https://docs.google.com")
-            # Đ��i cho trang load xong
-            WebDriverWait(self.driver, 20).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
-            )
-            self.logger.info("Google Docs opened successfully")
-        except Exception as e:
-            self.logger.error(f"Failed to open Google Docs: {str(e)}")
-            raise
-    
+    def initialize_browser(self, force=False):
+        with self.lock:
+            if self.is_initialized and not force:
+                return True
+                
+            try:
+                if self.driver:
+                    self.driver.quit()
+                
+                service = Service(ChromeDriverManager().install())
+                self.driver = webdriver.Chrome(service=service, options=self.chrome_options)
+                self.driver.set_page_load_timeout(30)
+                self.driver.implicitly_wait(10)
+                
+                # Preload Google Docs
+                self.driver.get("https://docs.google.com/document/u/0/create")
+                time.sleep(2)  # Allow initial load
+                
+                # Wait for essential elements
+                WebDriverWait(self.driver, 20).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body"))
+                )
+                
+                self.is_initialized = True
+                self.logger.info("Browser initialized successfully")
+                return True
+                
+            except Exception as e:
+                self.logger.error(f"Browser initialization failed: {str(e)}")
+                self.is_initialized = False
+                if self.driver:
+                    self.driver.quit()
+                    self.driver = None
+                return False
+
+    def execute_with_retry(self, action, max_retries=2):
+        for attempt in range(max_retries):
+            try:
+                if not self.is_initialized:
+                    if not self.initialize_browser():
+                        raise Exception("Failed to initialize browser")
+                return action()
+            except Exception as e:
+                self.logger.error(f"Action failed (attempt {attempt + 1}): {str(e)}")
+                if attempt < max_retries - 1:
+                    self.initialize_browser(force=True)
+                else:
+                    raise
+
     def start_voice_typing(self):
-        try:
-            if not self.driver:
-                self.initialize_browser()
-            
-            # Tìm và click nút voice typing
-            voice_button = WebDriverWait(self.driver, 20).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[aria-label="Nhập bằng giọng nói"]'))
-            )
-            self.driver.execute_script("arguments[0].click();", voice_button)
-            self.logger.info("Voice typing started")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to start voice typing: {str(e)}")
-            self.initialize_browser()  # Thử khởi tạo lại nếu có lỗi
-    
+        def _start():
+            try:
+                # Tìm và click nút voice typing bằng JavaScript
+                script = """
+                    var buttons = document.querySelectorAll('button');
+                    for(var i=0; i<buttons.length; i++) {
+                        if(buttons[i].getAttribute('aria-label') === 'Nhập bằng giọng nói') {
+                            buttons[i].click();
+                            return true;
+                        }
+                    }
+                    return false;
+                """
+                result = self.driver.execute_script(script)
+                if not result:
+                    raise Exception("Voice typing button not found")
+                return True
+            except Exception as e:
+                raise Exception(f"Failed to start voice typing: {str(e)}")
+
+        return self.execute_with_retry(_start)
+
     def stop_voice_typing(self):
-        try:
-            if not self.driver:
-                return
-                
-            voice_button = WebDriverWait(self.driver, 20).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[aria-label="Dừng nhập bằng giọng nói"]'))
-            )
-            self.driver.execute_script("arguments[0].click();", voice_button)
-            self.logger.info("Voice typing stopped")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to stop voice typing: {str(e)}")
-    
+        def _stop():
+            try:
+                script = """
+                    var buttons = document.querySelectorAll('button');
+                    for(var i=0; i<buttons.length; i++) {
+                        if(buttons[i].getAttribute('aria-label') === 'Dừng nhập bằng giọng nói') {
+                            buttons[i].click();
+                            return true;
+                        }
+                    }
+                    return false;
+                """
+                result = self.driver.execute_script(script)
+                if not result:
+                    raise Exception("Stop button not found")
+                return True
+            except Exception as e:
+                raise Exception(f"Failed to stop voice typing: {str(e)}")
+
+        return self.execute_with_retry(_stop)
+
     def get_text(self):
-        try:
-            if not self.driver:
-                return ""
-                
-            content = WebDriverWait(self.driver, 20).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, ".kix-paragraphrenderer"))
-            )
-            return content.text
-            
-        except Exception as e:
-            self.logger.error(f"Failed to get text: {str(e)}")
-            return ""
-    
+        def _get_text():
+            try:
+                script = """
+                    return document.querySelector('.kix-paragraphrenderer').innerText;
+                """
+                text = self.driver.execute_script(script)
+                return text or ""
+            except Exception as e:
+                raise Exception(f"Failed to get text: {str(e)}")
+
+        return self.execute_with_retry(_get_text)
+
     def close(self):
-        try:
-            if self.driver:
-                self.driver.quit()
-                self.driver = None
+        with self.lock:
+            try:
+                if self.driver:
+                    self.driver.quit()
+                    self.driver = None
+                self.is_initialized = False
                 self.logger.info("Browser closed successfully")
-        except Exception as e:
-            self.logger.error(f"Failed to close browser: {str(e)}")
-    
+            except Exception as e:
+                self.logger.error(f"Failed to close browser: {str(e)}")
+
     def __del__(self):
         self.close()
-    
-    def initialize_service(self, credentials):
-        try:
-            self.service = build('docs', 'v1', credentials=credentials)
-        except NameError:
-            print("Không thể khởi tạo service do thiếu thư viện Google Client.")
-
-    def insert_text(self, document_id, text):
-        if not self.service:
-            print("Service chưa được khởi tạo.")
-            return False
-
-        try:
-            requests = [
-                {
-                    'insertText': {
-                        'location': {
-                            'index': 1,
-                        },
-                        'text': text
-                    }
-                }
-            ]
-            self.service.documents().batchUpdate(documentId=document_id, body={'requests': requests}).execute()
-            return True
-        except Exception as error:
-            print(f'Đã xảy ra lỗi: {error}')
-            return False
-
-    def get_document_content(self, document_id):
-        if not self.service:
-            print("Service chưa được khởi tạo.")
-            return None
-
-        try:
-            document = self.service.documents().get(documentId=document_id).execute()
-            return document.get('body').get('content')
-        except Exception as error:
-            print(f'Đã xảy ra lỗi: {error}')
-            return None
