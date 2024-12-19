@@ -1,97 +1,76 @@
-import pyautogui
-import keyboard
+import webbrowser
 import time
 import logging
-import webbrowser
-import psutil
-import os
-from pathlib import Path
+import pyperclip
+from pynput.keyboard import Controller, Key
 
 class DocsController:
     def __init__(self):
         self.logger = logging.getLogger('voicetyping')
+        self.keyboard = Controller()
         self.is_recording = False
-        self.setup_shortcuts()
-        pyautogui.FAILSAFE = True
-        
-    def setup_shortcuts(self):
-        # Phím tắt cho Google Docs
-        self.shortcuts = {
-            'voice_typing': 'ctrl+shift+s',  # Phím tắt mở voice typing
-            'stop_voice': 'esc',             # Phím tắt dừng voice typing
-            'copy': 'ctrl+a, ctrl+c',        # Copy toàn bộ văn bản
-        }
-        
-    def open_google_docs(self):
+        self.docs_url = 'https://docs.google.com/document/u/0/create'
+        self.open_docs()
+
+    def open_docs(self):
         try:
-            # Mở Google Docs trong trình duyệt mặc định
-            webbrowser.open('https://docs.google.com/document/u/0/create', new=2)
-            time.sleep(3)  # Đợi trang load
-            
-            # Maximize cửa sổ
-            pyautogui.hotkey('win', 'up')
-            time.sleep(1)
-            
-            self.logger.info("Google Docs opened successfully")
+            webbrowser.open(self.docs_url)
+            time.sleep(2)  # Đợi docs mở
+            self.logger.info("Google Docs opened")
             return True
         except Exception as e:
-            self.logger.error(f"Failed to open Google Docs: {str(e)}")
+            self.logger.error(f"Failed to open docs: {e}")
             return False
+
+    def press_keys(self, *keys):
+        try:
+            for key in keys:
+                self.keyboard.press(key)
+            for key in reversed(keys):
+                self.keyboard.release(key)
+            time.sleep(0.5)
+        except Exception as e:
+            self.logger.error(f"Key press failed: {e}")
 
     def start_voice_typing(self):
         try:
             if not self.is_recording:
-                # Mở voice typing bằng phím tắt
-                keyboard.send(self.shortcuts['voice_typing'])
-                time.sleep(1)
-                
-                # Xác nhận voice typing đã bật
+                # Ctrl + Shift + S để bật voice typing
+                self.press_keys(Key.ctrl, Key.shift, 's')
                 self.is_recording = True
                 self.logger.info("Voice typing started")
                 return True
-                
         except Exception as e:
-            self.logger.error(f"Failed to start voice typing: {str(e)}")
+            self.logger.error(f"Failed to start voice: {e}")
             return False
 
     def stop_voice_typing(self):
         try:
             if self.is_recording:
-                # Dừng voice typing
-                keyboard.send(self.shortcuts['stop_voice'])
-                time.sleep(0.5)
-                
+                # ESC để tắt voice typing
+                self.press_keys(Key.esc)
                 self.is_recording = False
                 self.logger.info("Voice typing stopped")
                 return True
-                
         except Exception as e:
-            self.logger.error(f"Failed to stop voice typing: {str(e)}")
+            self.logger.error(f"Failed to stop voice: {e}")
             return False
 
     def get_text(self):
         try:
-            # Copy toàn bộ văn bản
-            for shortcut in self.shortcuts['copy'].split(', '):
-                keyboard.send(shortcut)
-                time.sleep(0.2)
-            
-            # Lấy text từ clipboard
-            import pyperclip
-            text = pyperclip.paste()
-            return text
-            
+            # Ctrl + A để chọn text
+            self.press_keys(Key.ctrl, 'a')
+            # Ctrl + C để copy
+            self.press_keys(Key.ctrl, 'c')
+            return pyperclip.paste()
         except Exception as e:
-            self.logger.error(f"Failed to get text: {str(e)}")
+            self.logger.error(f"Failed to get text: {e}")
             return ""
 
     def close(self):
         try:
-            # Đóng tab hiện tại
-            keyboard.send('ctrl+w')
-            self.logger.info("Browser tab closed successfully")
+            # Ctrl + W để đóng tab
+            self.press_keys(Key.ctrl, 'w')
+            self.logger.info("Tab closed")
         except Exception as e:
-            self.logger.error(f"Failed to close browser: {str(e)}")
-
-    def __del__(self):
-        self.close()
+            self.logger.error(f"Failed to close: {e}")

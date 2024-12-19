@@ -244,3 +244,7 @@ Stacktrace:
 2024-12-19 23:07:50,877 - voicetyping - INFO - Browser initialized successfully
 2024-12-19 23:07:50,877 - voicetyping - INFO - Starting VoiceTyping application
 2024-12-19 23:08:35,235 - voicetyping - INFO - Browser closed successfully
+2024-12-19 23:19:51,302 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-19 23:19:54,710 - voicetyping - INFO - Voice typing started
+2024-12-19 23:20:03,148 - voicetyping - INFO - Voice typing stopped
+2024-12-19 23:20:27,460 - voicetyping - INFO - Browser tab closed successfully
