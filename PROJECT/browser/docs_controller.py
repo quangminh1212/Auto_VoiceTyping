@@ -2,75 +2,48 @@ import webbrowser
 import time
 import logging
 import pyperclip
-from pynput.keyboard import Controller, Key
 
 class DocsController:
     def __init__(self):
         self.logger = logging.getLogger('voicetyping')
-        self.keyboard = Controller()
         self.is_recording = False
         self.docs_url = 'https://docs.google.com/document/u/0/create'
+        self.instructions = {
+            'start': 'Nhấn Ctrl + Shift + S để bắt đầu ghi âm',
+            'stop': 'Nhấn ESC để dừng ghi âm',
+            'copy': 'Nhấn Ctrl + A rồi Ctrl + C để copy text',
+            'close': 'Nhấn Ctrl + W để đóng tab'
+        }
         self.open_docs()
 
     def open_docs(self):
         try:
             webbrowser.open(self.docs_url)
-            time.sleep(2)  # Đợi docs mở
+            time.sleep(1)
             self.logger.info("Google Docs opened")
+            print("\nHướng dẫn sử dụng:")
+            for action, guide in self.instructions.items():
+                print(f"- {guide}")
             return True
         except Exception as e:
             self.logger.error(f"Failed to open docs: {e}")
             return False
 
-    def press_keys(self, *keys):
-        try:
-            for key in keys:
-                self.keyboard.press(key)
-            for key in reversed(keys):
-                self.keyboard.release(key)
-            time.sleep(0.5)
-        except Exception as e:
-            self.logger.error(f"Key press failed: {e}")
-
     def start_voice_typing(self):
-        try:
-            if not self.is_recording:
-                # Ctrl + Shift + S để bật voice typing
-                self.press_keys(Key.ctrl, Key.shift, 's')
-                self.is_recording = True
-                self.logger.info("Voice typing started")
-                return True
-        except Exception as e:
-            self.logger.error(f"Failed to start voice: {e}")
-            return False
+        print(f"\n{self.instructions['start']}")
+        self.is_recording = True
+        return True
 
     def stop_voice_typing(self):
-        try:
-            if self.is_recording:
-                # ESC để tắt voice typing
-                self.press_keys(Key.esc)
-                self.is_recording = False
-                self.logger.info("Voice typing stopped")
-                return True
-        except Exception as e:
-            self.logger.error(f"Failed to stop voice: {e}")
-            return False
+        print(f"\n{self.instructions['stop']}")
+        self.is_recording = False
+        return True
 
     def get_text(self):
-        try:
-            # Ctrl + A để chọn text
-            self.press_keys(Key.ctrl, 'a')
-            # Ctrl + C để copy
-            self.press_keys(Key.ctrl, 'c')
-            return pyperclip.paste()
-        except Exception as e:
-            self.logger.error(f"Failed to get text: {e}")
-            return ""
+        print(f"\n{self.instructions['copy']}")
+        time.sleep(1)
+        return pyperclip.paste()
 
     def close(self):
-        try:
-            # Ctrl + W để đóng tab
-            self.press_keys(Key.ctrl, 'w')
-            self.logger.info("Tab closed")
-        except Exception as e:
-            self.logger.error(f"Failed to close: {e}")
+        print(f"\n{self.instructions['close']}")
+        self.logger.info("Instructions shown for closing tab")
