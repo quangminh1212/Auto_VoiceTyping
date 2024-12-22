@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import (QMainWindow, QPushButton, QVBoxLayout, 
-                           QWidget, QLabel, QTextEdit, QMessageBox)
+from PyQt6.QtWidgets import (QMainWindow, QPushButton, 
+                           QVBoxLayout, QWidget, QLabel, QTextEdit)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtGui import QFont
 
 class MainWindow(QMainWindow):
     def __init__(self, docs_controller):
@@ -38,14 +38,10 @@ class MainWindow(QMainWindow):
         get_text_btn = QPushButton("Lấy văn bản")
         get_text_btn.setStyleSheet("background-color: #2196F3; color: white; padding: 10px;")
         
-        help_btn = QPushButton("Hướng dẫn")
-        help_btn.setStyleSheet("background-color: #9E9E9E; color: white; padding: 10px;")
-        
         # Kết nối sự kiện
         start_btn.clicked.connect(self.start_recording)
         stop_btn.clicked.connect(self.stop_recording)
         get_text_btn.clicked.connect(self.get_text)
-        help_btn.clicked.connect(self.docs_controller.show_instructions)
         
         # Thêm vào layout
         layout.addWidget(title)
@@ -53,7 +49,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(start_btn)
         layout.addWidget(stop_btn)
         layout.addWidget(get_text_btn)
-        layout.addWidget(help_btn)
         
         main_widget.setLayout(layout)
         
