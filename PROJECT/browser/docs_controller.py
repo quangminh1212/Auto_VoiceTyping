@@ -1,11 +1,16 @@
 import logging
 import pyperclip
 from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtCore import QObject, pyqtSignal
 import threading
 import time
 
-class DocsController:
+class DocsController(QObject):
+    # Tạo signal để gửi text mới
+    text_received = pyqtSignal(str)
+
     def __init__(self):
+        super().__init__()
         self.logger = logging.getLogger('voicetyping')
         self.is_recording = False
         self.current_text = ""
@@ -36,7 +41,7 @@ class DocsController:
     def start_voice_typing(self):
         if not self.speech_enabled:
             QMessageBox.warning(None, "Cảnh báo", 
-                "Chức năng nhận diện giọng nói không khả dụng!")
+                "Chức năng nhận diện giọng nói không kh�� dụng!")
             return False
             
         try:
@@ -70,7 +75,11 @@ class DocsController:
                     try:
                         audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=10)
                         text = self.recognizer.recognize_google(audio, language='vi-VN')
+                        
+                        # Thêm text mới và emit signal
                         self.current_text += text + " "
+                        self.text_received.emit(text)  # Emit text mới
+                        
                         self.logger.info(f"Recognized: {text}")
                     except sr.WaitTimeoutError:
                         continue
