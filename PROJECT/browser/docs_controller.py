@@ -4,44 +4,37 @@ from PyQt6.QtWidgets import QMessageBox
 import threading
 import time
 
-# Khai báo biến global
-SPEECH_RECOGNITION_ENABLED = False
-
-try:
-    import speech_recognition as sr
-    import pyaudio
-    SPEECH_RECOGNITION_ENABLED = True
-except ImportError as e:
-    logging.error(f"Speech recognition import error: {e}")
-    SPEECH_RECOGNITION_ENABLED = False
-
 class DocsController:
     def __init__(self):
         self.logger = logging.getLogger('voicetyping')
         self.is_recording = False
         self.current_text = ""
         self.recording_thread = None
+        self.speech_enabled = False
         
         # Khởi tạo speech recognition
-        if SPEECH_RECOGNITION_ENABLED:
-            try:
-                self.recognizer = sr.Recognizer()
-                self.microphone = sr.Microphone()
-                # Test microphone
-                with self.microphone as source:
-                    self.recognizer.adjust_for_ambient_noise(source, duration=1)
-                self.logger.info("Speech recognition initialized successfully")
-            except Exception as e:
-                self.logger.error(f"Failed to initialize speech recognition: {e}")
-                QMessageBox.critical(None, "Lỗi", 
-                    "Không thể khởi tạo microphone.\nVui lòng kiểm tra thiết bị âm thanh.")
-                SPEECH_RECOGNITION_ENABLED = False
-        else:
+        try:
+            import speech_recognition as sr
+            import pyaudio
+            
+            self.recognizer = sr.Recognizer()
+            self.microphone = sr.Microphone()
+            
+            # Test microphone
+            with self.microphone as source:
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)
+            
+            self.speech_enabled = True
+            self.logger.info("Speech recognition initialized successfully")
+            
+        except Exception as e:
+            self.logger.error(f"Speech recognition init error: {e}")
             QMessageBox.warning(None, "Cảnh báo", 
-                "Chức năng nhận diện giọng nói không khả dụng.\nVui lòng cài đặt lại các thư viện cần thiết.")
+                "Chức năng nhận diện giọng nói không khả dụng.\nVui lòng kiểm tra microphone và thư viện.")
+            self.speech_enabled = False
 
     def start_voice_typing(self):
-        if not SPEECH_RECOGNITION_ENABLED:
+        if not self.speech_enabled:
             QMessageBox.warning(None, "Cảnh báo", 
                 "Chức năng nhận diện giọng nói không khả dụng!")
             return False
@@ -58,7 +51,7 @@ class DocsController:
             # Bắt đầu ghi âm trong thread riêng
             self.is_recording = True
             self.recording_thread = threading.Thread(target=self._record_audio)
-            self.recording_thread.daemon = True  # Thread sẽ tự đóng khi chương trình kết thúc
+            self.recording_thread.daemon = True
             self.recording_thread.start()
             
             QMessageBox.information(None, "Thông báo", "Bắt đầu ghi âm.\nHãy nói to và rõ ràng!")
@@ -88,7 +81,7 @@ class DocsController:
                         QMessageBox.warning(None, "Cảnh báo", 
                             "Lỗi kết nối API Google Speech Recognition")
                         break
-                    time.sleep(0.1)  # Tránh CPU cao
+                    time.sleep(0.1)
                         
         except Exception as e:
             self.logger.error(f"Recording error: {e}")
