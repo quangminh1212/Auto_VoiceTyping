@@ -277,3 +277,13 @@ Stacktrace:
 2024-12-22 21:59:19,625 - voicetyping - INFO - Recognized: Alo bạn có thể nghe thấy mình nói gì không
 2024-12-22 21:59:21,093 - voicetyping - INFO - Voice recording started
 2024-12-22 21:59:22,591 - voicetyping - ERROR - Recording error: name 'sr' is not defined
+2024-12-22 22:00:40,802 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-22 22:00:41,922 - voicetyping - INFO - Speech recognition initialized successfully
+2024-12-22 22:00:43,577 - voicetyping - INFO - Voice recording started
+2024-12-22 22:00:47,604 - voicetyping - INFO - Recognized: alo alo bạn nghe thấy mình nói gì không
+2024-12-22 22:01:10,361 - voicetyping - INFO - Recognized: 123 123 123
+2024-12-22 22:01:13,544 - voicetyping - INFO - Recognized: 45
+2024-12-22 22:01:17,668 - voicetyping - INFO - Recognized: 9363 74950
+2024-12-22 22:01:23,374 - voicetyping - INFO - Recognized: Nam Mô A Di Đà
+2024-12-22 22:01:31,741 - voicetyping - INFO - Recognized: lô USD được bao giờ bồ đề tát đỏa 3D nam mô a tọa 354
+2024-12-22 22:01:40,370 - voicetyping - INFO - Voice recording stopped
