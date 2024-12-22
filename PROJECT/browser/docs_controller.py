@@ -4,10 +4,15 @@ from PyQt6.QtWidgets import QMessageBox
 import threading
 import time
 
+# Khai báo biến global
+SPEECH_RECOGNITION_ENABLED = False
+
 try:
     import speech_recognition as sr
+    import pyaudio
     SPEECH_RECOGNITION_ENABLED = True
-except ImportError:
+except ImportError as e:
+    logging.error(f"Speech recognition import error: {e}")
     SPEECH_RECOGNITION_ENABLED = False
 
 class DocsController:
@@ -17,7 +22,7 @@ class DocsController:
         self.current_text = ""
         self.recording_thread = None
         
-        # Kiểm tra và khởi tạo speech recognition
+        # Khởi tạo speech recognition
         if SPEECH_RECOGNITION_ENABLED:
             try:
                 self.recognizer = sr.Recognizer()
