@@ -272,3 +272,8 @@ Stacktrace:
 2024-12-22 21:57:30,117 - voicetyping - INFO - Recognized: nghe thấy gì không
 2024-12-22 21:57:31,188 - voicetyping - INFO - Voice recording started
 2024-12-22 21:57:33,919 - voicetyping - ERROR - Recording error: name 'sr' is not defined
+2024-12-22 21:59:10,784 - voicetyping - INFO - Starting VoiceTyping application
+2024-12-22 21:59:12,032 - voicetyping - INFO - Speech recognition initialized successfully
+2024-12-22 21:59:19,625 - voicetyping - INFO - Recognized: Alo bạn có thể nghe thấy mình nói gì không
+2024-12-22 21:59:21,093 - voicetyping - INFO - Voice recording started
+2024-12-22 21:59:22,591 - voicetyping - ERROR - Recording error: name 'sr' is not defined
