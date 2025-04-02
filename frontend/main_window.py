@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         
         self.input_controller = InputController()
         self.recognizer = SpeechRecognizer()
-        self.input_controller.ctrl_pressed.connect(self.on_ctrl_pressed)
+        self.input_controller.alt_pressed.connect(self.on_alt_pressed)
         self.recognizer.text_recognized.connect(self.input_controller.type_text)
 
     def setup_dark_theme(self):
@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         else:
             self.stop_recognition()
 
-    def on_ctrl_pressed(self, pressed):
+    def on_alt_pressed(self, pressed):
         if pressed:
             self.start_recognition()
         else:
