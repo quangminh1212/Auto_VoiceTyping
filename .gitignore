@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Thư viện PyInstaller
+*.manifest
+*.spec
+
+# Log files
+*.log
+logs/
+voicetyping.log
+pip_error.log
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.bak
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Files tạo ra khi chạy
+suppress_warnings.py
+suppress_warnings.pth
+
+# FFmpeg
+ffmpeg/
+
+# Thư mục Runtime
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Tệp cấu hình cá nhân
+config.ini
+settings.json
