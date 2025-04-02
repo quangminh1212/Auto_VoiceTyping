@@ -8,6 +8,7 @@ import warnings
 import keyboard
 from queue import Queue
 import threading
+import logging
 
 # Chỉ định đường dẫn đến FFmpeg
 ffmpeg_path = r"C:\ffmpeg\bin"
@@ -28,6 +29,8 @@ if not os.path.exists(AudioSegment.converter):
 
 # Tắt cảnh báo từ pydub
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="pydub.utils")
+
+logger = logging.getLogger(__name__)
 
 class SpeechRecognizer(QObject):
     text_recognized = pyqtSignal(str)
@@ -51,10 +54,12 @@ class SpeechRecognizer(QObject):
                 self.thread.wait()
 
     def cleanup(self):
+        logger.info("Dọn dẹp tài nguyên...")
         self.stop_listening()
+        logger.info("Đã dọn dẹp xong")
 
-    def is_ctrl_pressed(self):
-        return keyboard.is_pressed('ctrl')
+    def is_alt_pressed(self):
+        return keyboard.is_pressed('alt')
 
 class ListeningThread(QThread):
     def __init__(self, recognizer):

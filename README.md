@@ -142,9 +142,9 @@ PyAudio đôi khi gặp vấn đề khi cài đặt thông qua pip. Nếu gặp 
 ## Sử dụng ứng dụng
 
 1. Sau khi khởi động, chương trình sẽ hiển thị nút "Start"
-2. Nhấn nút "Start" hoặc giữ phím Ctrl để bắt đầu nhận dạng giọng nói
+2. Nhấn nút "Start" hoặc giữ phím Alt để bắt đầu nhận dạng giọng nói
 3. Nói vào microphone, văn bản sẽ được nhận dạng và nhập vào vị trí con trỏ hiện tại
-4. Nhấn nút "Stop" hoặc thả phím Ctrl để dừng nhận dạng giọng nói
+4. Nhấn nút "Stop" hoặc thả phím Alt để dừng nhận dạng giọng nói
 
 ### Xử lý lỗi thường gặp
 
