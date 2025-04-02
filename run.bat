@@ -36,6 +36,8 @@ if not exist requirements.txt (
         echo keyboard==0.13.5 >> requirements.txt
         echo SpeechRecognition==3.8.1 >> requirements.txt
         echo pydub==0.25.1 >> requirements.txt
+        echo nltk==3.6.5 >> requirements.txt
+        echo PyAudio==0.2.14 >> requirements.txt
     )
 )
 
@@ -53,14 +55,14 @@ if %errorlevel% neq 0 (
 echo Dang kiem tra FFmpeg...
 where ffmpeg >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [CẢNH BÁO] Khong tim thay FFmpeg trong PATH. 
+    echo [CANH BAO] Khong tim thay FFmpeg trong PATH.
     echo Chuc nang nhan dang giong noi co the khong hoat dong.
     echo Hay tai FFmpeg tu https://ffmpeg.org/download.html va them vao PATH he thong.
     
     :: Kiểm tra thư mục C:\ffmpeg\bin
-    if exist C:\ffmpeg\bin\ffmpeg.exe (
+    if exist "C:\ffmpeg\bin\ffmpeg.exe" (
         echo Da tim thay FFmpeg tai C:\ffmpeg\bin
-        set PATH=C:\ffmpeg\bin;%PATH%
+        set "PATH=C:\ffmpeg\bin;%PATH%"
     )
 )
 
