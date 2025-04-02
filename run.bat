@@ -88,13 +88,21 @@ if %errorlevel% neq 0 (
     echo Tai tai https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
 )
 
-:: Bỏ tắt cảnh báo khi chạy chương trình chính
-set PYTHONWARNINGS=default
+:: Bỏ tắt cảnh báo nghiêm trọng khi chạy chương trình chính, nhưng vẫn ẩn DeprecationWarning
+set PYTHONWARNINGS=ignore::DeprecationWarning
+
+:: Tạo file .pth để ẩn cảnh báo từ PyQt5
+if not exist venv\Lib\site-packages\suppress_warnings.pth (
+    echo Dang tao file de an canh bao PyQt5...
+    echo import warnings >> venv\Lib\site-packages\suppress_warnings.py
+    echo warnings.filterwarnings("ignore", category=DeprecationWarning) >> venv\Lib\site-packages\suppress_warnings.py
+    echo from suppress_warnings import * > venv\Lib\site-packages\suppress_warnings.pth
+)
 
 :: Chạy chương trình chính
 echo.
 echo Dang khoi dong chuong trinh...
-python main.py
+python -W ignore::DeprecationWarning main.py
 
 :: Chờ để người dùng xem được kết quả
 echo.
