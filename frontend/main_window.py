@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QTextEdit, QVBox
 from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5.QtGui import QIcon, QTextCursor, QPalette, QColor, QFont
 from backend.controller import InputController
-from backend.recognizer import SpeechRecognizer
+from backend.recognizer import SpeechRecognizer, UTF8FileHandler
 import logging
 
 # Cấu hình logging

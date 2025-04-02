@@ -5,13 +5,14 @@ import keyboard
 import logging
 import platform
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from backend.recognizer import UTF8FileHandler
 
-# Cấu hình logging
+# Cấu hình logging với mã hóa UTF-8
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("voicetyping.log"),
+        UTF8FileHandler("voicetyping.log", encoding='utf-8'),
         logging.StreamHandler()
     ]
 )

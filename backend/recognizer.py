@@ -9,13 +9,18 @@ import keyboard
 from queue import Queue
 import threading
 import logging
+import codecs
 
-# Cấu hình logging
+# Cấu hình logging với mã hóa UTF-8 để hỗ trợ tiếng Việt
+class UTF8FileHandler(logging.FileHandler):
+    def __init__(self, filename, mode='a', encoding='utf-8', delay=False):
+        logging.FileHandler.__init__(self, filename, mode, encoding, delay)
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("voicetyping.log"),
+        UTF8FileHandler("voicetyping.log", encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
