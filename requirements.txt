@@ -1,4 +1,0 @@
-PyQt6
-pyperclip
-SpeechRecognition
-pyaudio

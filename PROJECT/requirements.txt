@@ -1,8 +1,0 @@
-PyQt6
-google-auth
-google-auth-oauthlib
-selenium
-pyautogui
-rxpy
-cryptography
-structlog
