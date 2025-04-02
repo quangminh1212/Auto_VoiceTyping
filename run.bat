@@ -7,7 +7,7 @@ if not exist venv\ (
     echo Dang tao moi truong ao Python...
     python -m venv venv
     if %errorlevel% neq 0 (
-        echo [LỖI] Khong the tao moi truong ao. Hay kiem tra Python da duoc cai dat chua.
+        echo [LOI] Khong the tao moi truong ao. Hay kiem tra Python da duoc cai dat chua.
         pause
         exit /b 1
     )
@@ -18,7 +18,7 @@ if not exist venv\ (
 echo Dang kich hoat moi truong ao...
 call venv\Scripts\activate.bat
 if %errorlevel% neq 0 (
-    echo [LỖI] Khong the kich hoat moi truong ao.
+    echo [LOI] Khong the kich hoat moi truong ao.
     pause
     exit /b 1
 )
@@ -41,11 +41,15 @@ if not exist requirements.txt (
     )
 )
 
+:: Dọn dẹp các gói không hợp lệ
+echo Kiem tra va don dep cac goi Python khong hop le...
+pip install --quiet --upgrade pip
+
 :: Cài đặt các thư viện từ requirements.txt
 echo Dang cai dat cac thu vien can thiet...
-pip install -r requirements.txt
+pip install -r requirements.txt 2>pip_error.log
 if %errorlevel% neq 0 (
-    echo [LỖI] Khong the cai dat cac thu vien. 
+    echo [LOI] Khong the cai dat cac thu vien. Xem chi tiet trong file pip_error.log
     echo Hay thu cai dat thu cong: pip install PyQt5 pyautogui pyperclip keyboard SpeechRecognition pydub
     pause
     exit /b 1
@@ -61,9 +65,25 @@ if %errorlevel% neq 0 (
     
     :: Kiểm tra thư mục C:\ffmpeg\bin
     if exist "C:\ffmpeg\bin\ffmpeg.exe" (
-        echo Da tim thay FFmpeg tai C:\ffmpeg\bin
+        echo [OK] Da tim thay FFmpeg tai C:\ffmpeg\bin
         set "PATH=C:\ffmpeg\bin;%PATH%"
+    ) else (
+        echo [CANH BAO] FFmpeg khong duoc tim thay! Nhan dang giong noi se khong hoat dong.
     )
+) else (
+    echo [OK] Da tim thay FFmpeg trong PATH he thong.
+)
+
+:: Khởi tạo NLTK data nếu cần
+echo Dang khoi tao NLTK data...
+python -c "import nltk; nltk.download('punkt', quiet=True); print('[OK] Da cai dat NLTK data.')"
+
+:: Kiểm tra PyAudio
+echo Dang kiem tra PyAudio...
+python -c "import pyaudio; print('[OK] PyAudio hoat dong.')" 2>nul
+if %errorlevel% neq 0 (
+    echo [CANH BAO] PyAudio khong hoat dong, co the can cai dat thu cong.
+    echo Tai tai https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
 )
 
 :: Chạy chương trình chính
