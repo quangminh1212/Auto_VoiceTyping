@@ -41,11 +41,13 @@ if not exist requirements.txt (
     )
 )
 
-:: Dọn dẹp các gói không hợp lệ
-echo Kiem tra va don dep cac goi Python khong hop le...
-pip install --quiet --upgrade pip
+:: Dọn dẹp các gói không hợp lệ và ẩn cảnh báo
+echo Dang nang cap pip va don dep goi khong hop le...
+pip install --quiet --upgrade pip >nul 2>nul
+:: Tắt hiển thị cảnh báo và chỉ hiển thị lỗi
+set PYTHONWARNINGS=ignore
 
-:: Cài đặt các thư viện từ requirements.txt
+:: Cài đặt các thư viện từ requirements.txt (ẩn cảnh báo)
 echo Dang cai dat cac thu vien can thiet...
 pip install -r requirements.txt 2>pip_error.log
 if %errorlevel% neq 0 (
@@ -74,9 +76,9 @@ if %errorlevel% neq 0 (
     echo [OK] Da tim thay FFmpeg trong PATH he thong.
 )
 
-:: Khởi tạo NLTK data nếu cần
+:: Khởi tạo NLTK data nếu cần (ẩn cảnh báo)
 echo Dang khoi tao NLTK data...
-python -c "import nltk; nltk.download('punkt', quiet=True); print('[OK] Da cai dat NLTK data.')"
+python -c "import nltk; nltk.download('punkt', quiet=True); print('[OK] Da cai dat NLTK data.')" 2>nul
 
 :: Kiểm tra PyAudio
 echo Dang kiem tra PyAudio...
@@ -85,6 +87,9 @@ if %errorlevel% neq 0 (
     echo [CANH BAO] PyAudio khong hoat dong, co the can cai dat thu cong.
     echo Tai tai https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
 )
+
+:: Bỏ tắt cảnh báo khi chạy chương trình chính
+set PYTHONWARNINGS=default
 
 :: Chạy chương trình chính
 echo.
