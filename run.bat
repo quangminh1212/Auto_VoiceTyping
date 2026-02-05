@@ -1,6 +1,12 @@
 @echo off
+chcp 65001 >nul
 echo ===== CHUONG TRINH VOICETYPING =====
 echo.
+
+:: Kiểm tra phiên bản Python
+echo Dang kiem tra phien ban Python...
+for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYVER=%%i
+echo Phien ban Python: %PYVER%
 
 :: Kiểm tra và tạo môi trường ảo nếu chưa tồn tại
 if not exist venv\ (
@@ -23,81 +29,66 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: Sao chép file requirements.txt từ thư mục dist nếu không có ở thư mục gốc
-if not exist requirements.txt (
-    if exist dist\requirements.txt (
-        echo Dang sao chep file requirements.txt tu thu muc dist...
-        copy dist\requirements.txt .
-    ) else (
-        echo Tao file requirements.txt moi...
-        echo PyQt5==5.15.6 > requirements.txt
-        echo pyautogui==0.9.53 >> requirements.txt
-        echo pyperclip==1.9.0 >> requirements.txt
-        echo keyboard==0.13.5 >> requirements.txt
-        echo SpeechRecognition==3.8.1 >> requirements.txt
-        echo pydub==0.25.1 >> requirements.txt
-        echo nltk==3.6.5 >> requirements.txt
-        echo PyAudio==0.2.14 >> requirements.txt
-    )
-)
-
-:: Dọn dẹp các gói không hợp lệ và ẩn cảnh báo
-echo Dang nang cap pip va don dep goi khong hop le...
-pip install --quiet --upgrade pip >nul 2>nul
-:: Tắt hiển thị cảnh báo và chỉ hiển thị lỗi
+:: Tắt hiển thị cảnh báo
 set PYTHONWARNINGS=ignore
 
-:: Cài đặt các thư viện từ requirements.txt (ẩn cảnh báo)
+:: Nâng cấp pip
+echo Dang nang cap pip...
+pip install --quiet --upgrade pip >nul 2>nul
+
+:: Cài đặt các thư viện cơ bản từ requirements.txt
 echo Dang cai dat cac thu vien can thiet...
 pip install -r requirements.txt 2>pip_error.log
 if %errorlevel% neq 0 (
-    echo [LOI] Khong the cai dat cac thu vien. Xem chi tiet trong file pip_error.log
-    echo Hay thu cai dat thu cong: pip install PyQt5 pyautogui pyperclip keyboard SpeechRecognition pydub
-    pause
-    exit /b 1
+    echo [CANH BAO] Co mot so thu vien khong cai duoc. Xem chi tiet trong file pip_error.log
 )
 
-:: Kiểm tra xem FFmpeg đã được cài đặt chưa
-echo Dang kiem tra FFmpeg...
-where ffmpeg >nul 2>&1
+:: Cài đặt PyAudio - thử nhiều cách
+echo Dang cai dat PyAudio...
+python -c "import pyaudio" 2>nul
 if %errorlevel% neq 0 (
-    echo [CANH BAO] Khong tim thay FFmpeg trong PATH.
-    echo Chuc nang nhan dang giong noi co the khong hoat dong.
-    echo Hay tai FFmpeg tu https://ffmpeg.org/download.html va them vao PATH he thong.
+    echo PyAudio chua duoc cai dat, dang thu cac phuong phap...
     
-    :: Kiểm tra thư mục C:\ffmpeg\bin
-    if exist "C:\ffmpeg\bin\ffmpeg.exe" (
-        echo [OK] Da tim thay FFmpeg tai C:\ffmpeg\bin
-        set "PATH=C:\ffmpeg\bin;%PATH%"
+    :: Phương pháp 1: Thử pip thông thường
+    pip install pyaudio 2>nul
+    if %errorlevel% neq 0 (
+        echo [INFO] Pip khong the cai dat PyAudio, thu dung pipwin...
+        
+        :: Phương pháp 2: Thử pipwin
+        pip install pipwin 2>nul
+        pipwin install pyaudio 2>nul
+        
+        if %errorlevel% neq 0 (
+            echo [CANH BAO] Khong the cai dat PyAudio tu dong.
+            echo.
+            echo De cai dat PyAudio thu cong:
+            echo 1. Tai file .whl tu: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
+            echo 2. Chon phien ban phu hop voi Python cua ban
+            echo 3. Chay: pip install [ten_file.whl]
+            echo.
+            echo Hoac su dung Python 3.13 hoac thap hon de co wheel san.
+            echo.
+        ) else (
+            echo [OK] Da cai dat PyAudio thanh cong qua pipwin.
+        )
     ) else (
-        echo [CANH BAO] FFmpeg khong duoc tim thay! Nhan dang giong noi se khong hoat dong.
+        echo [OK] Da cai dat PyAudio thanh cong qua pip.
     )
 ) else (
-    echo [OK] Da tim thay FFmpeg trong PATH he thong.
+    echo [OK] PyAudio da duoc cai dat.
 )
 
-:: Khởi tạo NLTK data nếu cần (ẩn cảnh báo)
-echo Dang khoi tao NLTK data...
-python -c "import nltk; nltk.download('punkt', quiet=True); print('[OK] Da cai dat NLTK data.')" 2>nul
-
-:: Kiểm tra PyAudio
-echo Dang kiem tra PyAudio...
-python -c "import pyaudio; print('[OK] PyAudio hoat dong.')" 2>nul
+:: Kiểm tra lại PyAudio
+python -c "import pyaudio; print('[OK] PyAudio hoat dong binh thuong.')" 2>nul
 if %errorlevel% neq 0 (
-    echo [CANH BAO] PyAudio khong hoat dong, co the can cai dat thu cong.
-    echo Tai tai https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
+    echo.
+    echo [CANH BAO] PyAudio khong hoat dong! Chuc nang nhan dang giong noi se khong lam viec.
+    echo Hay cai dat PyAudio thu cong hoac su dung Python 3.13 tro xuong.
+    echo.
 )
 
-:: Bỏ tắt cảnh báo nghiêm trọng khi chạy chương trình chính, nhưng vẫn ẩn DeprecationWarning
+:: Bỏ ẩn các cảnh báo quan trọng khi chạy chương trình
 set PYTHONWARNINGS=ignore::DeprecationWarning
-
-:: Tạo file .pth để ẩn cảnh báo từ PyQt5
-if not exist venv\Lib\site-packages\suppress_warnings.pth (
-    echo Dang tao file de an canh bao PyQt5...
-    echo import warnings >> venv\Lib\site-packages\suppress_warnings.py
-    echo warnings.filterwarnings("ignore", category=DeprecationWarning) >> venv\Lib\site-packages\suppress_warnings.py
-    echo from suppress_warnings import * > venv\Lib\site-packages\suppress_warnings.pth
-)
 
 :: Chạy chương trình chính
 echo.
@@ -107,4 +98,4 @@ python -W ignore::DeprecationWarning main.py
 :: Chờ để người dùng xem được kết quả
 echo.
 echo Chuong trinh da ket thuc.
-pause 
+pause
