@@ -68,3 +68,13 @@ settings.json
 
 # Tools
 bfg.jar
+
+# Runtime generated files
+.req_hash
+*.req_hash
+req_hash*.txt
+
+# Temp files
+%TEMP%/
+*.tmp
+*.temp
