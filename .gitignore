@@ -78,3 +78,4 @@ req_hash*.txt
 %TEMP%/
 *.tmp
 *.temp
+*.lock
