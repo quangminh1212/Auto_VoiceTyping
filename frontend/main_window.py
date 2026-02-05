@@ -5,7 +5,7 @@ UI hiện đại với dark theme, animations và hiệu ứng chuyên nghiệp
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QPushButton, QLabel, QFrame, 
-                             QProgressBar, QComboBox, QSystemTrayIcon, QMenu,
+                             QProgressBar, QComboBox, QSystemTrayIcon, QMenu, QAction,
                              QGraphicsDropShadowEffect, QSizePolicy)
 from PyQt5.QtCore import Qt, QSize, QTimer, QPropertyAnimation, QEasingCurve, pyqtProperty
 from PyQt5.QtGui import (QIcon, QPalette, QColor, QFont, QPainter, 
@@ -243,6 +243,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         
         self.setup_ui()
+        self.setup_tray()
         self.setup_connections()
         
         # Controllers
@@ -261,6 +262,86 @@ class MainWindow(QMainWindow):
         
         # Drag support
         self._drag_pos = None
+    
+    def setup_tray(self):
+        """Thiết lập System Tray Icon"""
+        self.tray_icon = QSystemTrayIcon(self)
+        self.tray_icon.setIcon(QIcon("logo.ico"))
+        self.tray_icon.setToolTip("VoiceTyping - Nhập văn bản bằng giọng nói")
+        
+        # Tạo menu cho tray
+        tray_menu = QMenu()
+        tray_menu.setStyleSheet(f"""
+            QMenu {{
+                background-color: {Colors.BG_SURFACE};
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid {Colors.BORDER};
+                border-radius: 8px;
+                padding: 4px;
+            }}
+            QMenu::item {{
+                padding: 8px 20px;
+                border-radius: 4px;
+            }}
+            QMenu::item:selected {{
+                background-color: {Colors.BG_HOVER};
+            }}
+        """)
+        
+        # Actions
+        show_action = tray_menu.addAction("🖥️ Hiển thị")
+        show_action.triggered.connect(self.show_window)
+        
+        start_action = tray_menu.addAction("🎤 Bắt đầu nghe")
+        start_action.triggered.connect(self.start_recognition)
+        
+        stop_action = tray_menu.addAction("⏹ Dừng nghe")
+        stop_action.triggered.connect(self.stop_recognition)
+        
+        tray_menu.addSeparator()
+        
+        quit_action = tray_menu.addAction("❌ Thoát")
+        quit_action.triggered.connect(self.quit_app)
+        
+        self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.activated.connect(self.on_tray_activated)
+        self.tray_icon.show()
+    
+    def show_window(self):
+        """Hiển thị cửa sổ từ tray"""
+        self.show()
+        self.activateWindow()
+        self.raise_()
+    
+    def on_tray_activated(self, reason):
+        """Xử lý khi click vào tray icon"""
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.show_window()
+        elif reason == QSystemTrayIcon.Trigger:
+            # Single click - toggle listening
+            if self.toggle_btn.text().startswith("🎤"):
+                self.start_recognition()
+            else:
+                self.stop_recognition()
+    
+    def quit_app(self):
+        """Thoát ứng dụng hoàn toàn"""
+        self.recognizer.cleanup()
+        self.tray_icon.hide()
+        QApplication.quit()
+    
+    def changeEvent(self, event):
+        """Minimize vào tray thay vì taskbar"""
+        if event.type() == event.WindowStateChange:
+            if self.windowState() & Qt.WindowMinimized:
+                self.hide()
+                self.tray_icon.showMessage(
+                    "VoiceTyping",
+                    "Ứng dụng đang chạy ở khay hệ thống.\nNhấn đúp để mở lại hoặc click để bật/tắt micro.",
+                    QSystemTrayIcon.Information,
+                    2000
+                )
+        super().changeEvent(event)
     
     def setup_ui(self):
         """Thiết lập giao diện"""
