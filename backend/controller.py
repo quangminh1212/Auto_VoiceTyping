@@ -22,6 +22,7 @@ class InputController(QObject):
         self.timer.start(50)  # Kiểm tra mỗi 50ms
         self.last_alt_state = False
         self.pending_text = None
+        self.is_processing = False  # Flag để tránh xử lý trùng lặp
         
         # Cấu hình pyautogui
         pyautogui.PAUSE = 0.05
@@ -31,16 +32,23 @@ class InputController(QObject):
         """Nhập văn bản sau khi thả phím Alt"""
         if not text or not text.strip():
             return
+        
+        # Nếu đang xử lý, bỏ qua
+        if self.is_processing:
+            print(f"[Controller] Đang xử lý, bỏ qua: {text}")
+            return
             
         self.pending_text = text.strip()
+        self.is_processing = True
         print(f"[Controller] Đã nhận văn bản: {text}")
         
         # Đợi người dùng thả Alt rồi mới paste
-        QTimer.singleShot(200, self._check_and_type)
+        QTimer.singleShot(300, self._check_and_type)
 
     def _check_and_type(self):
         """Kiểm tra và paste khi Alt đã thả"""
         if self.pending_text is None:
+            self.is_processing = False
             return
             
         # Nếu Alt vẫn đang nhấn, chờ thêm
@@ -49,26 +57,31 @@ class InputController(QObject):
             return
         
         # Thực hiện paste
-        self._do_paste(self.pending_text)
+        text_to_paste = self.pending_text
         self.pending_text = None
+        self._do_paste(text_to_paste)
+        
+        # Đợi một chút trước khi cho phép xử lý tiếp
+        QTimer.singleShot(500, self._reset_processing)
+
+    def _reset_processing(self):
+        """Reset flag processing"""
+        self.is_processing = False
 
     def _do_paste(self, text):
         """Thực hiện paste văn bản"""
         try:
-            # Thêm khoảng trắng trước nếu cần
-            text_to_paste = text
-            
             # Copy vào clipboard
-            pyperclip.copy(text_to_paste)
+            pyperclip.copy(text)
             
             # Đợi một chút để đảm bảo clipboard ready
-            time.sleep(0.05)
+            time.sleep(0.1)
             
             # Paste
             pyautogui.hotkey('ctrl', 'v')
             
             # Thêm khoảng trắng sau
-            time.sleep(0.05)
+            time.sleep(0.1)
             pyautogui.press('space')
             
             print(f"[Controller] Đã paste: {text}")
