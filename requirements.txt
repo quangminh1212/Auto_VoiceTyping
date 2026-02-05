@@ -12,6 +12,7 @@ SpeechRecognition>=3.10.0
 # Audio Processing
 numpy>=1.24.0
 sounddevice>=0.4.6
+PyAudio>=0.2.14
 
 # Input Control
 PyAutoGUI>=0.9.53
