@@ -65,3 +65,6 @@ htmlcov/
 # Tệp cấu hình cá nhân
 config.ini
 settings.json
+
+# Tools
+bfg.jar
