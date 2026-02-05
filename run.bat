@@ -34,57 +34,21 @@ set PYTHONWARNINGS=ignore
 
 :: Nâng cấp pip
 echo Dang nang cap pip...
-pip install --quiet --upgrade pip >nul 2>nul
+python -m pip install --quiet --upgrade pip >nul 2>nul
 
-:: Cài đặt các thư viện cơ bản từ requirements.txt
+:: Cài đặt các thư viện từ requirements.txt
 echo Dang cai dat cac thu vien can thiet...
-pip install -r requirements.txt 2>pip_error.log
+pip install -r requirements.txt 2>nul
 if %errorlevel% neq 0 (
-    echo [CANH BAO] Co mot so thu vien khong cai duoc. Xem chi tiet trong file pip_error.log
+    echo [CANH BAO] Co mot so thu vien khong cai duoc.
 )
 
-:: Cài đặt PyAudio - thử nhiều cách
-echo Dang cai dat PyAudio...
-python -c "import pyaudio" 2>nul
+:: Kiểm tra sounddevice (thay thế PyAudio)
+echo Dang kiem tra thu vien am thanh...
+python -c "import sounddevice; print('[OK] Sounddevice hoat dong binh thuong.')" 2>nul
 if %errorlevel% neq 0 (
-    echo PyAudio chua duoc cai dat, dang thu cac phuong phap...
-    
-    :: Phương pháp 1: Thử pip thông thường
-    pip install pyaudio 2>nul
-    if %errorlevel% neq 0 (
-        echo [INFO] Pip khong the cai dat PyAudio, thu dung pipwin...
-        
-        :: Phương pháp 2: Thử pipwin
-        pip install pipwin 2>nul
-        pipwin install pyaudio 2>nul
-        
-        if %errorlevel% neq 0 (
-            echo [CANH BAO] Khong the cai dat PyAudio tu dong.
-            echo.
-            echo De cai dat PyAudio thu cong:
-            echo 1. Tai file .whl tu: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
-            echo 2. Chon phien ban phu hop voi Python cua ban
-            echo 3. Chay: pip install [ten_file.whl]
-            echo.
-            echo Hoac su dung Python 3.13 hoac thap hon de co wheel san.
-            echo.
-        ) else (
-            echo [OK] Da cai dat PyAudio thanh cong qua pipwin.
-        )
-    ) else (
-        echo [OK] Da cai dat PyAudio thanh cong qua pip.
-    )
-) else (
-    echo [OK] PyAudio da duoc cai dat.
-)
-
-:: Kiểm tra lại PyAudio
-python -c "import pyaudio; print('[OK] PyAudio hoat dong binh thuong.')" 2>nul
-if %errorlevel% neq 0 (
-    echo.
-    echo [CANH BAO] PyAudio khong hoat dong! Chuc nang nhan dang giong noi se khong lam viec.
-    echo Hay cai dat PyAudio thu cong hoac su dung Python 3.13 tro xuong.
-    echo.
+    echo [CANH BAO] Sounddevice chua duoc cai dat!
+    pip install sounddevice
 )
 
 :: Bỏ ẩn các cảnh báo quan trọng khi chạy chương trình
@@ -93,6 +57,8 @@ set PYTHONWARNINGS=ignore::DeprecationWarning
 :: Chạy chương trình chính
 echo.
 echo Dang khoi dong chuong trinh...
+echo Nhan giu phim Alt de noi. Nhan nut X de thoat.
+echo.
 python -W ignore::DeprecationWarning main.py
 
 :: Chờ để người dùng xem được kết quả
