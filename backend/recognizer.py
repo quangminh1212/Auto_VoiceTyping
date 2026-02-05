@@ -1,16 +1,21 @@
 """
 Voice Recognition Engine - Hỗ trợ nhận dạng giọng nói với Google Speech API
+Sử dụng sounddevice thay vì PyAudio để tương thích với Python 3.14+
 """
 
 import os
 import sys
+import io
+import wave
 import warnings
 import time
 import threading
+import tempfile
 from queue import Queue
 from enum import Enum
 
 import numpy as np
+import sounddevice as sd
 import speech_recognition as sr
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 import keyboard
@@ -24,6 +29,133 @@ class RecognitionEngine(Enum):
     GOOGLE = "google"
     WHISPER = "whisper"
     FASTER_WHISPER = "faster_whisper"
+
+
+class SoundDeviceMicrophone:
+    """
+    Custom microphone class sử dụng sounddevice thay vì PyAudio
+    Tương thích với speech_recognition
+    """
+    
+    def __init__(self, sample_rate=16000, chunk_size=1024):
+        self.sample_rate = sample_rate
+        self.chunk_size = chunk_size
+        self.stream = None
+        self.audio_buffer = []
+        self.is_recording = False
+        self.SAMPLE_WIDTH = 2  # 16-bit audio
+        self.SAMPLE_RATE = sample_rate
+        
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+        
+    def start(self):
+        """Bắt đầu thu âm"""
+        self.audio_buffer = []
+        self.is_recording = True
+        
+    def stop(self):
+        """Dừng thu âm"""
+        self.is_recording = False
+        
+    def record(self, duration: float) -> sr.AudioData:
+        """Thu âm trong khoảng thời gian nhất định"""
+        frames = int(duration * self.sample_rate)
+        recording = sd.rec(frames, samplerate=self.sample_rate, channels=1, dtype='int16')
+        sd.wait()
+        
+        # Chuyển đổi sang bytes
+        audio_bytes = recording.tobytes()
+        return sr.AudioData(audio_bytes, self.sample_rate, self.SAMPLE_WIDTH)
+    
+    def listen_until_silence(self, timeout=5, phrase_time_limit=15, 
+                              energy_threshold=300, pause_threshold=0.8) -> sr.AudioData:
+        """
+        Lắng nghe cho đến khi phát hiện im lặng
+        Trả về AudioData tương thích với speech_recognition
+        """
+        frames = []
+        silence_frames = 0
+        silence_threshold = int(pause_threshold * self.sample_rate / self.chunk_size)
+        max_frames = int(phrase_time_limit * self.sample_rate / self.chunk_size)
+        timeout_frames = int(timeout * self.sample_rate / self.chunk_size)
+        
+        speech_started = False
+        frame_count = 0
+        
+        def audio_callback(indata, frames_count, time_info, status):
+            nonlocal frames, silence_frames, speech_started, frame_count
+            
+            if not self.is_recording:
+                return
+                
+            # Tính energy của frame
+            energy = np.abs(indata).mean() * 32768
+            
+            if energy > energy_threshold:
+                speech_started = True
+                silence_frames = 0
+                frames.append(indata.copy())
+            elif speech_started:
+                silence_frames += 1
+                frames.append(indata.copy())
+            
+            frame_count += 1
+        
+        self.is_recording = True
+        
+        try:
+            with sd.InputStream(samplerate=self.sample_rate, channels=1, 
+                               dtype='int16', blocksize=self.chunk_size,
+                               callback=audio_callback):
+                start_time = time.time()
+                
+                while self.is_recording:
+                    time.sleep(0.05)
+                    
+                    # Check timeout
+                    elapsed = time.time() - start_time
+                    if not speech_started and elapsed > timeout:
+                        raise TimeoutError("Hết thời gian chờ giọng nói")
+                    
+                    # Check phrase time limit
+                    if speech_started and elapsed > phrase_time_limit:
+                        break
+                    
+                    # Check silence after speech
+                    if speech_started and silence_frames >= silence_threshold:
+                        break
+                    
+                    # Max frames check
+                    if frame_count >= max_frames:
+                        break
+        except Exception as e:
+            if "Hết thời gian" in str(e):
+                raise sr.WaitTimeoutError(str(e))
+            raise
+        
+        if not frames:
+            raise sr.WaitTimeoutError("Không có dữ liệu âm thanh")
+        
+        # Combine all frames
+        audio_data = np.concatenate(frames)
+        audio_bytes = audio_data.tobytes()
+        
+        return sr.AudioData(audio_bytes, self.sample_rate, self.SAMPLE_WIDTH)
+    
+    def get_audio_level(self, duration=0.1) -> float:
+        """Lấy mức âm thanh hiện tại"""
+        try:
+            frames = int(duration * self.sample_rate)
+            recording = sd.rec(frames, samplerate=self.sample_rate, channels=1, dtype='int16')
+            sd.wait()
+            level = np.abs(recording).mean() / 32768.0
+            return min(level * 3, 1.0)
+        except Exception:
+            return 0.0
 
 
 class SpeechRecognizer(QObject):
@@ -100,6 +232,7 @@ class ListeningThread(QThread):
         self.recognizer = recognizer
         self.audio_queue = Queue()
         self.processing_thread = None
+        self.microphone = SoundDeviceMicrophone(sample_rate=16000)
 
     def run(self):
         """Main thread loop"""
@@ -111,22 +244,24 @@ class ListeningThread(QThread):
         self.processing_thread.start()
 
         try:
-            with sr.Microphone(sample_rate=16000) as source:
-                # Calibrate cho ambient noise
-                self.recognizer.status_changed.emit("Đang hiệu chỉnh micro...")
-                self.recognizer.recognizer.adjust_for_ambient_noise(source, duration=0.5)
+            self.recognizer.status_changed.emit("Đang khởi tạo micro...")
+            
+            with self.microphone:
                 self.recognizer.status_changed.emit("Đang lắng nghe...")
-
+                
                 while self.recognizer.is_listening:
                     try:
-                        # Listen với timeout ngắn để responsive hơn
-                        audio = self.recognizer.recognizer.listen(
-                            source,
+                        # Listen với timeout
+                        self.microphone.start()
+                        audio = self.microphone.listen_until_silence(
                             timeout=3,
-                            phrase_time_limit=15
+                            phrase_time_limit=15,
+                            energy_threshold=self.recognizer.recognizer.energy_threshold,
+                            pause_threshold=self.recognizer.recognizer.pause_threshold
                         )
+                        self.microphone.stop()
 
-                        # Tính audio level
+                        # Emit audio level
                         try:
                             audio_data = np.frombuffer(audio.get_raw_data(), dtype=np.int16)
                             level = np.abs(audio_data).mean() / 32768.0
@@ -137,6 +272,9 @@ class ListeningThread(QThread):
                         self.audio_queue.put(audio)
 
                     except sr.WaitTimeoutError:
+                        self.recognizer.audio_level.emit(0.0)
+                        continue
+                    except TimeoutError:
                         self.recognizer.audio_level.emit(0.0)
                         continue
                     except Exception as e:
