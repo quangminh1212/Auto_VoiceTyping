@@ -235,8 +235,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("VoiceTyping")
-        self.setMinimumSize(380, 280)
-        self.setMaximumSize(500, 400)
+        self.setMinimumSize(420, 320)
+        self.setMaximumSize(600, 480)
         self.setWindowIcon(QIcon("logo.ico"))
         
         # Flags - Giữ cửa sổ luôn trên cùng
@@ -487,11 +487,13 @@ class MainWindow(QMainWindow):
             color: {Colors.TEXT_PRIMARY};
             font-size: 13px;
             background-color: {Colors.BG_SURFACE};
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 8px;
         """)
         self.last_text_label.setAlignment(Qt.AlignCenter)
         self.last_text_label.setMinimumHeight(50)
+        self.last_text_label.setMaximumHeight(120)
+        self.last_text_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.last_text_label.hide()
         layout.addWidget(self.last_text_label)
         
