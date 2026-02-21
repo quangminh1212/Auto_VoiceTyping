@@ -4,6 +4,32 @@ setlocal enabledelayedexpansion
 echo ===== CHUONG TRINH VOICETYPING =====
 echo.
 
+:: ===== TỰ ĐỘNG CẬP NHẬT TỪ GIT =====
+git --version >nul 2>&1
+if %errorlevel% equ 0 (
+    if exist .git\ (
+        echo Dang kiem tra cap nhat tu Git...
+        :: Lưu commit hash hiện tại
+        for /f "tokens=*" %%h in ('git rev-parse HEAD 2^>nul') do set OLD_COMMIT=%%h
+        
+        :: Pull code mới
+        git pull --quiet 2>nul
+        if %errorlevel% equ 0 (
+            for /f "tokens=*" %%h in ('git rev-parse HEAD 2^>nul') do set NEW_COMMIT=%%h
+            if not "!OLD_COMMIT!"=="!NEW_COMMIT!" (
+                echo [UPDATE] Da cap nhat code moi tu Git!
+                echo.
+            ) else (
+                echo [OK] Code da la phien ban moi nhat.
+            )
+        ) else (
+            echo [INFO] Khong the ket noi Git remote, bo qua cap nhat.
+        )
+    )
+) else (
+    echo [INFO] Git chua duoc cai dat, bo qua cap nhat tu dong.
+)
+echo.
 :: Sử dụng Python 3.13 cụ thể
 set PYTHON_CMD=py -3.13
 %PYTHON_CMD% --version >nul 2>&1
