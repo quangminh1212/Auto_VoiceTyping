@@ -4,32 +4,6 @@ setlocal enabledelayedexpansion
 echo ===== CHUONG TRINH VOICETYPING =====
 echo.
 
-:: ===== TỰ ĐỘNG CẬP NHẬT TỪ GIT =====
-git --version >nul 2>&1
-if %errorlevel% equ 0 (
-    if exist .git\ (
-        echo Dang kiem tra cap nhat tu Git...
-        :: Lưu commit hash hiện tại
-        for /f "tokens=*" %%h in ('git rev-parse HEAD 2^>nul') do set OLD_COMMIT=%%h
-        
-        :: Pull code mới
-        git pull --quiet 2>nul
-        if %errorlevel% equ 0 (
-            for /f "tokens=*" %%h in ('git rev-parse HEAD 2^>nul') do set NEW_COMMIT=%%h
-            if not "!OLD_COMMIT!"=="!NEW_COMMIT!" (
-                echo [UPDATE] Da cap nhat code moi tu Git!
-                echo.
-            ) else (
-                echo [OK] Code da la phien ban moi nhat.
-            )
-        ) else (
-            echo [INFO] Khong the ket noi Git remote, bo qua cap nhat.
-        )
-    )
-) else (
-    echo [INFO] Git chua duoc cai dat, bo qua cap nhat tu dong.
-)
-echo.
 :: Sử dụng Python 3.13 cụ thể
 set PYTHON_CMD=py -3.13
 %PYTHON_CMD% --version >nul 2>&1
@@ -137,13 +111,6 @@ if %NEED_INSTALL%==1 (
     echo [OK] Dependencies da duoc cai dat day du.
 )
 
-:: ===== XÓA CACHE PYTHON ĐỂ ĐẢM BẢO CODE MỚI =====
-echo Dang xoa Python cache...
-if exist backend\__pycache__ rmdir /s /q backend\__pycache__ 2>nul
-if exist frontend\__pycache__ rmdir /s /q frontend\__pycache__ 2>nul
-if exist __pycache__ rmdir /s /q __pycache__ 2>nul
-echo [OK] Cache da duoc xoa.
-
 :: ===== KIỂM TRA THƯ VIỆN =====
 echo.
 echo Dang kiem tra cac thu vien chinh...
@@ -152,20 +119,48 @@ python -c "import sounddevice; print('[OK] Sounddevice hoat dong')" 2>nul || ech
 python -c "import PyQt5; print('[OK] PyQt5 hoat dong')" 2>nul || echo [X] PyQt5 khong hoat dong
 python -c "import speech_recognition; print('[OK] SpeechRecognition hoat dong')" 2>nul || echo [X] SpeechRecognition khong hoat dong
 
-:: ===== CHẠY CHƯƠNG TRÌNH =====
+:: ===== CHẠY CHƯƠNG TRÌNH (VÒNG LẶP AUTO-RESTART) =====
 set PYTHONWARNINGS=ignore::DeprecationWarning
+
+:run_loop
+:: Xóa cache Python để đảm bảo code mới
+if exist backend\__pycache__ rmdir /s /q backend\__pycache__ 2>nul
+if exist frontend\__pycache__ rmdir /s /q frontend\__pycache__ 2>nul
+if exist __pycache__ rmdir /s /q __pycache__ 2>nul
+
 echo.
 echo ====================================
 echo VOICETYPING - San sang!
 echo ------------------------------------
 echo  Nhan giu Alt : Bat dau noi
 echo  Tha Alt      : Ket thuc va paste
-echo  Nut X        : Thoat ung dung
+echo  Ctrl+C       : Thoat hoan toan
+echo  Auto-reload  : Co (theo doi file .py)
 echo ====================================
 echo.
-python -W ignore::DeprecationWarning main.py
 
-:: Chờ để người dùng xem được kết quả
+python -W ignore::DeprecationWarning main.py
+set APP_EXIT_CODE=%errorlevel%
+
+:: Exit code 42 = hot-reload (thay đổi file .py)
+if %APP_EXIT_CODE%==42 (
+    echo.
+    echo [HOT-RELOAD] Dang tai lai ung dung...
+    timeout /t 1 /nobreak >nul
+    goto run_loop
+)
+
+:: Mọi exit code khác: vẫn restart (chỉ Ctrl+C mới thoát)
 echo.
-echo Chuong trinh da ket thuc.
-pause
+echo [INFO] Ung dung da thoat (code: %APP_EXIT_CODE%). Dang khoi dong lai sau 2 giay...
+echo [INFO] Nhan Ctrl+C de thoat hoan toan.
+timeout /t 2
+if %errorlevel% neq 0 (
+    echo.
+    echo Chuong trinh da ket thuc.
+    goto end_app
+)
+goto run_loop
+
+:end_app
+endlocal
