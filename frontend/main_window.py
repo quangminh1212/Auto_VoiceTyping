@@ -309,7 +309,7 @@ class ModernButton(QPushButton):
 
 
 class ModernComboBox(QComboBox):
-    """ComboBox với phong cách Google Material, dropdown đồng bộ theme"""
+    """ComboBox với phong cách Google Material, dropdown đồng bộ theme hoàn chỉnh"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -327,39 +327,60 @@ class ModernComboBox(QComboBox):
         list_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setView(list_view)
         self._list_view = list_view
+        self._popup_styled = False
         
         self.apply_theme()
     
     def showPopup(self):
-        """Override để thêm shadow và resize popup"""
+        """Override để style popup container hoàn chỉnh"""
         super().showPopup()
+        
+        # Style container (QFrame bọc quanh list view)
+        container = self.view().parentWidget()
+        if container:
+            bg = Theme.get('BG_SURFACE')
+            border = Theme.get('BORDER')
+            container.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {bg};
+                    border: 1px solid {border};
+                    border-radius: 12px;
+                    padding: 4px;
+                }}
+            """)
+        
+        # Style popup window
         popup = self.view().window()
         if popup and popup is not self:
             popup.setMinimumWidth(self.width())
-            # Thêm shadow cho popup
-            shadow = QGraphicsDropShadowEffect()
-            shadow.setBlurRadius(16)
-            shadow.setColor(QColor(0, 0, 0, 50 if not Theme.is_dark() else 80))
-            shadow.setOffset(0, 4)
-            popup.setGraphicsEffect(shadow)
+            # Shadow
+            if not self._popup_styled:
+                shadow = QGraphicsDropShadowEffect()
+                shadow.setBlurRadius(20)
+                shadow.setColor(QColor(0, 0, 0, 40 if not Theme.is_dark() else 70))
+                shadow.setOffset(0, 4)
+                popup.setGraphicsEffect(shadow)
+                self._popup_styled = True
     
     def apply_theme(self):
-        # Màu selected rõ ràng hơn
         sel_bg = ThemeColors.BLUE
         sel_text = "#FFFFFF"
         bg = Theme.get('BG_SURFACE')
-        border = Theme.get('TEXT_DISABLED')  # Border đậm hơn BORDER
+        border = Theme.get('BORDER')
         text = Theme.get('TEXT_PRIMARY')
-        hover = Theme.get('SELECTED')  # Hover dùng SELECTED cho rõ hơn
+        hover_bg = Theme.get('BG_HOVER')
+        self._popup_styled = False  # Reset để shadow cập nhật theme mới
         
+        # Stylesheet chính
         self.setStyleSheet(f"""
             QComboBox {{
-                background-color: {Theme.get('BG_SURFACE')};
+                background-color: {bg};
                 color: {text};
-                border: 1px solid {Theme.get('BORDER')};
+                border: 1px solid {border};
                 border-radius: 18px;
                 padding: 6px 14px;
                 font-size: 13px;
+                font-family: 'Segoe UI';
             }}
             QComboBox:hover {{
                 background-color: {Theme.get('BG_ELEVATED')};
@@ -383,9 +404,9 @@ class ModernComboBox(QComboBox):
             QComboBox QAbstractItemView {{
                 background-color: {bg};
                 color: {text};
-                border: 1px solid {border};
-                border-radius: 12px;
-                padding: 6px;
+                border: none;
+                border-radius: 10px;
+                padding: 4px;
                 outline: none;
                 selection-background-color: {sel_bg};
                 selection-color: {sel_text};
@@ -393,41 +414,46 @@ class ModernComboBox(QComboBox):
             QComboBox QAbstractItemView::item {{
                 padding: 8px 14px;
                 border-radius: 8px;
-                min-height: 28px;
+                min-height: 24px;
+                font-size: 13px;
             }}
             QComboBox QAbstractItemView::item:hover {{
-                background-color: {hover};
+                background-color: {hover_bg};
             }}
             QComboBox QAbstractItemView::item:selected {{
                 background-color: {sel_bg};
                 color: {sel_text};
+                border-radius: 8px;
             }}
-            QComboBox QAbstractItemView QScrollBar:vertical {{
+            QComboBox QAbstractItemView QScrollBar {{
                 width: 0px;
+                height: 0px;
             }}
         """)
         
-        # Style riêng cho list view
+        # Style riêng cho list view (đảm bảo override)
         self._list_view.setStyleSheet(f"""
             QListView {{
                 background-color: {bg};
                 color: {text};
-                border: 1px solid {border};
-                border-radius: 12px;
-                padding: 6px;
+                border: none;
+                border-radius: 10px;
+                padding: 4px;
                 outline: none;
             }}
             QListView::item {{
                 padding: 8px 14px;
                 border-radius: 8px;
-                min-height: 28px;
+                min-height: 24px;
+                font-size: 13px;
             }}
             QListView::item:hover {{
-                background-color: {hover};
+                background-color: {hover_bg};
             }}
             QListView::item:selected {{
                 background-color: {sel_bg};
                 color: {sel_text};
+                border-radius: 8px;
             }}
         """)
 
