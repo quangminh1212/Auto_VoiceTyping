@@ -415,6 +415,9 @@ class MainWindow(QMainWindow):
         self.recognizer.listening_started.connect(self.on_listening_started)
         self.recognizer.listening_stopped.connect(self.on_listening_stopped)
         
+        # Khởi tạo mic sẵn (pre-calibrate, giảm độ trễ khi nhấn Alt)
+        self.recognizer.initialize()
+        
         # Drag support
         self._drag_pos = None
         
@@ -548,8 +551,8 @@ class MainWindow(QMainWindow):
         
         self._content_widget = content
         content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(24, 12, 24, 20)
-        content_layout.setSpacing(14)
+        content_layout.setContentsMargins(28, 18, 28, 22)
+        content_layout.setSpacing(16)
         
         # Center: Sound Bars + Status
         center_layout = self._create_center_section()
@@ -639,8 +642,11 @@ class MainWindow(QMainWindow):
     def _create_center_section(self) -> QVBoxLayout:
         """Phần trung tâm: Sound Bars + Status"""
         layout = QVBoxLayout()
-        layout.setSpacing(10)
+        layout.setSpacing(12)
         layout.setAlignment(Qt.AlignCenter)
+        
+        # Spacer nhỏ phía trên
+        layout.addSpacing(6)
         
         # Sound Bars widget
         bars_container = QHBoxLayout()
