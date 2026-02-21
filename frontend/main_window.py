@@ -181,7 +181,7 @@ class AudioLevelBar(QProgressBar):
         self.setMaximum(100)
         self.setValue(0)
         self.setTextVisible(False)
-        self.setFixedHeight(6)
+        self.setFixedHeight(8)
         self.apply_theme()
     
     def apply_theme(self):
@@ -189,7 +189,7 @@ class AudioLevelBar(QProgressBar):
             QProgressBar {{
                 background-color: {Theme.get('BG_ELEVATED')};
                 border: none;
-                border-radius: 3px;
+                border-radius: 4px;
             }}
             QProgressBar::chunk {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
@@ -197,7 +197,7 @@ class AudioLevelBar(QProgressBar):
                     stop:0.33 {ThemeColors.GREEN},
                     stop:0.66 {ThemeColors.YELLOW},
                     stop:1 {ThemeColors.RED});
-                border-radius: 3px;
+                border-radius: 4px;
             }}
         """)
 
@@ -289,10 +289,11 @@ class ModernButton(QPushButton):
                 background-color: {bg};
                 color: {text_color};
                 border: none;
-                border-radius: 21px;
+                border-radius: 23px;
                 padding: 8px 28px;
-                font-size: 14px;
+                font-size: 15px;
                 font-weight: 600;
+                letter-spacing: 0.3px;
             }}
             QPushButton:hover {{
                 background-color: {bg_hover};
@@ -371,14 +372,14 @@ class ModernComboBox(QComboBox):
 class MainWindow(QMainWindow):
     """Giao diện chính - Frameless, Custom Title Bar, Google Sound Bars Theme"""
     
-    TITLE_BAR_HEIGHT = 40
+    TITLE_BAR_HEIGHT = 44
     BORDER_RADIUS = 16
     
     def __init__(self):
         super().__init__()
         self.setWindowTitle("VoiceTyping")
-        self.setMinimumSize(440, 400)
-        self.setMaximumSize(600, 540)
+        self.setMinimumSize(460, 460)
+        self.setMaximumSize(620, 580)
         
         # Frameless window
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -551,27 +552,46 @@ class MainWindow(QMainWindow):
         
         self._content_widget = content
         content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(28, 18, 28, 22)
-        content_layout.setSpacing(16)
+        content_layout.setContentsMargins(24, 20, 24, 20)
+        content_layout.setSpacing(0)
         
-        # Center: Sound Bars + Status
-        center_layout = self._create_center_section()
-        content_layout.addLayout(center_layout)
+        # Center Card: Sound Bars + Status + Audio Level
+        self._center_card = self._create_center_card()
+        content_layout.addWidget(self._center_card)
         
-        # Audio Level
-        self.audio_level_bar = AudioLevelBar()
-        self._themed_widgets.append(self.audio_level_bar)
-        content_layout.addWidget(self.audio_level_bar)
+        content_layout.addSpacing(16)
         
-        # Controls
+        # Controls: Toggle button
         controls = self._create_controls()
         content_layout.addLayout(controls)
+        
+        content_layout.addSpacing(14)
+        
+        # Divider
+        self._divider1 = QFrame()
+        self._divider1.setObjectName("dividerLine")
+        self._divider1.setFrameShape(QFrame.HLine)
+        self._divider1.setFixedHeight(1)
+        content_layout.addWidget(self._divider1)
+        
+        content_layout.addSpacing(14)
         
         # Settings
         settings = self._create_settings()
         content_layout.addLayout(settings)
         
         content_layout.addStretch()
+        
+        content_layout.addSpacing(8)
+        
+        # Footer divider
+        self._divider2 = QFrame()
+        self._divider2.setObjectName("dividerLine")
+        self._divider2.setFrameShape(QFrame.HLine)
+        self._divider2.setFixedHeight(1)
+        content_layout.addWidget(self._divider2)
+        
+        content_layout.addSpacing(10)
         
         # Footer
         footer = self._create_footer()
@@ -588,14 +608,14 @@ class MainWindow(QMainWindow):
         
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(16, 0, 8, 0)
-        layout.setSpacing(8)
+        layout.setSpacing(10)
         
         # Logo image
         self._logo_label = QLabel()
         if os.path.exists(self._logo_path):
             pixmap = QPixmap(self._logo_path)
-            self._logo_label.setPixmap(pixmap.scaled(22, 22, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        self._logo_label.setFixedSize(24, 24)
+            self._logo_label.setPixmap(pixmap.scaled(24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self._logo_label.setFixedSize(26, 26)
         layout.addWidget(self._logo_label)
         
         # Status indicator
@@ -613,7 +633,7 @@ class MainWindow(QMainWindow):
         # Theme toggle button (sun/moon)
         self._theme_btn = QPushButton("🌙")
         self._theme_btn.setObjectName("titleBtn")
-        self._theme_btn.setFixedSize(30, 30)
+        self._theme_btn.setFixedSize(32, 32)
         self._theme_btn.setCursor(Qt.PointingHandCursor)
         self._theme_btn.setToolTip("Chuyển chế độ sáng/tối")
         self._theme_btn.clicked.connect(self._toggle_theme)
@@ -622,16 +642,16 @@ class MainWindow(QMainWindow):
         # Minimize button
         self._min_btn = QPushButton("─")
         self._min_btn.setObjectName("titleBtn")
-        self._min_btn.setFixedSize(30, 30)
+        self._min_btn.setFixedSize(32, 32)
         self._min_btn.setCursor(Qt.PointingHandCursor)
-        self._min_btn.setToolTip("Thu nhỏ")
+        self._min_btn.setToolTip("Thu nhỏ vào khay hệ thống")
         self._min_btn.clicked.connect(self.showMinimized)
         layout.addWidget(self._min_btn)
         
         # Close button
         self._close_btn = QPushButton("✕")
         self._close_btn.setObjectName("closeBtn")
-        self._close_btn.setFixedSize(30, 30)
+        self._close_btn.setFixedSize(32, 32)
         self._close_btn.setCursor(Qt.PointingHandCursor)
         self._close_btn.setToolTip("Đóng")
         self._close_btn.clicked.connect(self.close)
@@ -639,19 +659,20 @@ class MainWindow(QMainWindow):
         
         return bar
     
-    def _create_center_section(self) -> QVBoxLayout:
-        """Phần trung tâm: Sound Bars + Status"""
-        layout = QVBoxLayout()
-        layout.setSpacing(12)
-        layout.setAlignment(Qt.AlignCenter)
+    def _create_center_card(self) -> QFrame:
+        """Card trung tâm: Sound Bars + Status + Audio Level + Last text"""
+        card = QFrame()
+        card.setObjectName("centerCard")
+        card.setFrameShape(QFrame.NoFrame)
         
-        # Spacer nhỏ phía trên
-        layout.addSpacing(6)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 16)
+        layout.setSpacing(10)
         
         # Sound Bars widget
         bars_container = QHBoxLayout()
         bars_container.setAlignment(Qt.AlignCenter)
-        self.sound_bars = SoundBarsWidget(size=56)
+        self.sound_bars = SoundBarsWidget(size=60)
         bars_container.addWidget(self.sound_bars)
         layout.addLayout(bars_container)
         
@@ -661,64 +682,83 @@ class MainWindow(QMainWindow):
         self.status_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.status_label)
         
+        # Audio Level bar (inside card)
+        self.audio_level_bar = AudioLevelBar()
+        self._themed_widgets.append(self.audio_level_bar)
+        layout.addWidget(self.audio_level_bar)
+        
         # Last recognized text
         self.last_text_label = QLabel("")
         self.last_text_label.setObjectName("lastTextLabel")
         self.last_text_label.setWordWrap(True)
         self.last_text_label.setAlignment(Qt.AlignCenter)
-        self.last_text_label.setMinimumHeight(50)
-        self.last_text_label.setMaximumHeight(120)
+        self.last_text_label.setMinimumHeight(44)
+        self.last_text_label.setMaximumHeight(110)
         self.last_text_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.last_text_label.hide()
         layout.addWidget(self.last_text_label)
         
-        return layout
+        return card
     
     def _create_controls(self) -> QHBoxLayout:
+        """Nút điều khiển chính - full width"""
         layout = QHBoxLayout()
-        layout.setSpacing(12)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
         
-        self.toggle_btn = ModernButton("🎤 Bắt đầu", primary=True)
-        self.toggle_btn.setMinimumWidth(180)
+        self.toggle_btn = ModernButton("🎤 Bắt đầu nghe", primary=True)
+        self.toggle_btn.setMinimumWidth(200)
+        self.toggle_btn.setFixedHeight(46)
         self.toggle_btn.clicked.connect(self.toggle_recognition)
         self._themed_widgets.append(self.toggle_btn)
         layout.addWidget(self.toggle_btn)
         
         return layout
     
-    def _create_settings(self) -> QHBoxLayout:
-        layout = QHBoxLayout()
-        layout.setSpacing(12)
+    def _create_settings(self) -> QVBoxLayout:
+        """Phần cài đặt với 2 hàng cân đối"""
+        outer = QVBoxLayout()
+        outer.setSpacing(10)
+        outer.setContentsMargins(0, 0, 0, 0)
         
-        self._lang_label = QLabel("Ngôn ngữ:")
+        # Row 1: Ngôn ngữ
+        row1 = QHBoxLayout()
+        row1.setSpacing(12)
+        self._lang_label = QLabel("🌐 Ngôn ngữ")
         self._lang_label.setObjectName("settingsLabel")
-        layout.addWidget(self._lang_label)
+        self._lang_label.setMinimumWidth(100)
+        row1.addWidget(self._lang_label)
         
         self.lang_combo = ModernComboBox()
         self.lang_combo.addItems(["Tiếng Việt", "English"])
         self.lang_combo.currentIndexChanged.connect(self.on_language_changed)
         self._themed_widgets.append(self.lang_combo)
-        layout.addWidget(self.lang_combo)
+        row1.addWidget(self.lang_combo, 1)
+        outer.addLayout(row1)
         
-        layout.addStretch()
-        
-        self._engine_label = QLabel("Engine:")
+        # Row 2: Engine
+        row2 = QHBoxLayout()
+        row2.setSpacing(12)
+        self._engine_label = QLabel("⚙️ Engine")
         self._engine_label.setObjectName("settingsLabel")
-        layout.addWidget(self._engine_label)
+        self._engine_label.setMinimumWidth(100)
+        row2.addWidget(self._engine_label)
         
         self.engine_combo = ModernComboBox()
         self.engine_combo.addItems(["Google", "Whisper", "Faster-Whisper"])
         self.engine_combo.currentIndexChanged.connect(self.on_engine_changed)
         self._themed_widgets.append(self.engine_combo)
-        layout.addWidget(self.engine_combo)
+        row2.addWidget(self.engine_combo, 1)
+        outer.addLayout(row2)
         
-        return layout
+        return outer
     
     def _create_footer(self) -> QHBoxLayout:
+        """Footer với hint và version"""
         layout = QHBoxLayout()
+        layout.setContentsMargins(4, 0, 4, 2)
         
-        self._hint_label = QLabel("💡 Giữ phím Alt để nói")
+        self._hint_label = QLabel("💡 Giữ phím Alt để nói  •  Click tray icon để bật/tắt")
         self._hint_label.setObjectName("footerLabel")
         layout.addWidget(self._hint_label)
         
@@ -773,14 +813,15 @@ class MainWindow(QMainWindow):
                 color: {Theme.get('TEXT_PRIMARY')};
                 font-size: 14px;
                 font-weight: 700;
+                letter-spacing: 0.3px;
                 background: transparent;
             }}
             #titleBtn {{
                 background-color: transparent;
                 color: {Theme.get('TEXT_SECONDARY')};
                 border: none;
-                border-radius: 15px;
-                font-size: 13px;
+                border-radius: 16px;
+                font-size: 14px;
             }}
             #titleBtn:hover {{
                 background-color: {Theme.get('BG_HOVER')};
@@ -789,8 +830,8 @@ class MainWindow(QMainWindow):
                 background-color: transparent;
                 color: {Theme.get('TEXT_SECONDARY')};
                 border: none;
-                border-radius: 15px;
-                font-size: 13px;
+                border-radius: 16px;
+                font-size: 14px;
             }}
             #closeBtn:hover {{
                 background-color: {ThemeColors.RED_LIGHT if not Theme.is_dark() else ThemeColors.RED_DARK_BG};
@@ -801,6 +842,15 @@ class MainWindow(QMainWindow):
                 border-bottom-left-radius: {r}px;
                 border-bottom-right-radius: {r}px;
             }}
+            #centerCard {{
+                background-color: {Theme.get('BG_SURFACE')};
+                border: 1px solid {Theme.get('DIVIDER')};
+                border-radius: 14px;
+            }}
+            #dividerLine {{
+                background-color: {Theme.get('DIVIDER')};
+                border: none;
+            }}
             #statusLabel {{
                 color: {Theme.get('TEXT_SECONDARY')};
                 font-size: 14px;
@@ -810,14 +860,15 @@ class MainWindow(QMainWindow):
             #lastTextLabel {{
                 color: {Theme.get('TEXT_PRIMARY')};
                 font-size: 13px;
-                background-color: {Theme.get('BG_SURFACE')};
-                padding: 12px 16px;
-                border-radius: 12px;
+                background-color: {Theme.get('BG_ELEVATED')};
+                padding: 10px 14px;
+                border-radius: 10px;
                 border: 1px solid {Theme.get('DIVIDER')};
             }}
             #settingsLabel {{
                 color: {Theme.get('TEXT_SECONDARY')};
                 font-size: 13px;
+                font-weight: 500;
                 background: transparent;
             }}
             #footerLabel {{
@@ -842,7 +893,7 @@ class MainWindow(QMainWindow):
             self.stop_recognition()
     
     def start_recognition(self):
-        self.toggle_btn.setText("⏹ Dừng")
+        self.toggle_btn.setText("⏹ Dừng nghe")
         self.toggle_btn.primary = False
         self.toggle_btn.danger = True
         self.toggle_btn._update_style()
@@ -851,7 +902,7 @@ class MainWindow(QMainWindow):
         self.recognizer.start_listening()
     
     def stop_recognition(self):
-        self.toggle_btn.setText("🎤 Bắt đầu")
+        self.toggle_btn.setText("🎤 Bắt đầu nghe")
         self.toggle_btn.primary = True
         self.toggle_btn.danger = False
         self.toggle_btn._update_style()
