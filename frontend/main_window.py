@@ -315,6 +315,7 @@ class ModernComboBox(QComboBox):
         super().__init__(parent)
         self.setFixedHeight(36)
         self.setCursor(Qt.PointingHandCursor)
+        self.setMaxVisibleItems(8)
         
         # Tạo custom list view cho dropdown popup
         from PyQt5.QtWidgets import QListView
@@ -322,34 +323,35 @@ class ModernComboBox(QComboBox):
         list_view.setMouseTracking(True)
         list_view.setCursor(Qt.PointingHandCursor)
         list_view.setFrameShape(QFrame.NoFrame)
+        # Ẩn scrollbar để đồng bộ giao diện
+        list_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        list_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setView(list_view)
         self._list_view = list_view
         
         self.apply_theme()
     
     def showPopup(self):
-        """Override để style popup container khi mở"""
+        """Override để style popup container và resize cho vừa"""
         super().showPopup()
-        # Style popup container trực tiếp
+        # Đảm bảo popup rộng bằng combobox
         popup = self.view().window()
         if popup and popup is not self:
-            popup.setStyleSheet(f"""
-                QWidget {{
-                    background-color: {Theme.get('BG_MAIN')};
-                    border: 1px solid {Theme.get('BORDER')};
-                    border-radius: 12px;
-                }}
-            """)
+            popup.setMinimumWidth(self.width())
     
     def apply_theme(self):
         sel_bg = ThemeColors.BLUE_LIGHT if not Theme.is_dark() else ThemeColors.BLUE_DARK_BG
+        bg = Theme.get('BG_MAIN')
+        border = Theme.get('BORDER')
+        text = Theme.get('TEXT_PRIMARY')
+        hover = Theme.get('BG_HOVER')
         
-        # Style cho combobox + dropdown
+        # Style cho combobox + dropdown - tất cả trong 1 stylesheet
         self.setStyleSheet(f"""
             QComboBox {{
                 background-color: {Theme.get('BG_SURFACE')};
-                color: {Theme.get('TEXT_PRIMARY')};
-                border: 1px solid {Theme.get('BORDER')};
+                color: {text};
+                border: 1px solid {border};
                 border-radius: 18px;
                 padding: 6px 14px;
                 font-size: 13px;
@@ -374,9 +376,9 @@ class ModernComboBox(QComboBox):
                 margin-right: 10px;
             }}
             QComboBox QAbstractItemView {{
-                background-color: {Theme.get('BG_MAIN')};
-                color: {Theme.get('TEXT_PRIMARY')};
-                border: 1px solid {Theme.get('BORDER')};
+                background-color: {bg};
+                color: {text};
+                border: 1px solid {border};
                 border-radius: 12px;
                 padding: 6px;
                 outline: none;
@@ -389,21 +391,25 @@ class ModernComboBox(QComboBox):
                 min-height: 28px;
             }}
             QComboBox QAbstractItemView::item:hover {{
-                background-color: {Theme.get('BG_HOVER')};
+                background-color: {hover};
             }}
             QComboBox QAbstractItemView::item:selected {{
                 background-color: {sel_bg};
                 color: {ThemeColors.BLUE};
             }}
+            QComboBox QAbstractItemView QScrollBar:vertical {{
+                width: 0px;
+            }}
         """)
         
-        # Style trực tiếp cho list view popup
+        # Style riêng cho list view - đảm bảo override hoàn toàn
         self._list_view.setStyleSheet(f"""
             QListView {{
-                background-color: {Theme.get('BG_MAIN')};
-                color: {Theme.get('TEXT_PRIMARY')};
-                border: none;
-                padding: 4px;
+                background-color: {bg};
+                color: {text};
+                border: 1px solid {border};
+                border-radius: 12px;
+                padding: 6px;
                 outline: none;
             }}
             QListView::item {{
@@ -412,7 +418,7 @@ class ModernComboBox(QComboBox):
                 min-height: 28px;
             }}
             QListView::item:hover {{
-                background-color: {Theme.get('BG_HOVER')};
+                background-color: {hover};
             }}
             QListView::item:selected {{
                 background-color: {sel_bg};
