@@ -309,15 +309,42 @@ class ModernButton(QPushButton):
 
 
 class ModernComboBox(QComboBox):
-    """ComboBox với phong cách Google Material, hỗ trợ theme"""
+    """ComboBox với phong cách Google Material, dropdown đồng bộ theme"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(36)
         self.setCursor(Qt.PointingHandCursor)
+        
+        # Tạo custom list view cho dropdown popup
+        from PyQt5.QtWidgets import QListView
+        list_view = QListView()
+        list_view.setMouseTracking(True)
+        list_view.setCursor(Qt.PointingHandCursor)
+        list_view.setFrameShape(QFrame.NoFrame)
+        self.setView(list_view)
+        self._list_view = list_view
+        
         self.apply_theme()
     
+    def showPopup(self):
+        """Override để style popup container khi mở"""
+        super().showPopup()
+        # Style popup container trực tiếp
+        popup = self.view().window()
+        if popup and popup is not self:
+            popup.setStyleSheet(f"""
+                QWidget {{
+                    background-color: {Theme.get('BG_MAIN')};
+                    border: 1px solid {Theme.get('BORDER')};
+                    border-radius: 12px;
+                }}
+            """)
+    
     def apply_theme(self):
+        sel_bg = ThemeColors.BLUE_LIGHT if not Theme.is_dark() else ThemeColors.BLUE_DARK_BG
+        
+        # Style cho combobox + dropdown
         self.setStyleSheet(f"""
             QComboBox {{
                 background-color: {Theme.get('BG_SURFACE')};
@@ -351,16 +378,45 @@ class ModernComboBox(QComboBox):
                 color: {Theme.get('TEXT_PRIMARY')};
                 border: 1px solid {Theme.get('BORDER')};
                 border-radius: 12px;
-                padding: 4px;
-                selection-background-color: {Theme.get('SELECTED')};
+                padding: 6px;
+                outline: none;
+                selection-background-color: {sel_bg};
                 selection-color: {ThemeColors.BLUE};
             }}
             QComboBox QAbstractItemView::item {{
                 padding: 8px 14px;
                 border-radius: 8px;
+                min-height: 28px;
             }}
             QComboBox QAbstractItemView::item:hover {{
                 background-color: {Theme.get('BG_HOVER')};
+            }}
+            QComboBox QAbstractItemView::item:selected {{
+                background-color: {sel_bg};
+                color: {ThemeColors.BLUE};
+            }}
+        """)
+        
+        # Style trực tiếp cho list view popup
+        self._list_view.setStyleSheet(f"""
+            QListView {{
+                background-color: {Theme.get('BG_MAIN')};
+                color: {Theme.get('TEXT_PRIMARY')};
+                border: none;
+                padding: 4px;
+                outline: none;
+            }}
+            QListView::item {{
+                padding: 8px 14px;
+                border-radius: 8px;
+                min-height: 28px;
+            }}
+            QListView::item:hover {{
+                background-color: {Theme.get('BG_HOVER')};
+            }}
+            QListView::item:selected {{
+                background-color: {sel_bg};
+                color: {ThemeColors.BLUE};
             }}
         """)
 
