@@ -1,6 +1,6 @@
 """
 VoiceTyping - Giao diện người dùng theo phong cách Google Sound Bars
-UI hiện đại với light theme, animations sóng âm thanh và palette 4 màu Google
+Frameless window, custom title bar, dual theme (light/dark), animated sound bars
 """
 
 import os
@@ -8,57 +8,103 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QPushButton, QLabel, QFrame, 
                              QProgressBar, QComboBox, QSystemTrayIcon, QMenu, QAction,
                              QGraphicsDropShadowEffect, QSizePolicy)
-from PyQt5.QtCore import Qt, QSize, QTimer, QPropertyAnimation, QEasingCurve, pyqtProperty
+from PyQt5.QtCore import Qt, QSize, QTimer, QPropertyAnimation, QEasingCurve, pyqtProperty, QPoint
 from PyQt5.QtGui import (QIcon, QPalette, QColor, QFont, QPainter, QPixmap,
-                          QLinearGradient, QBrush, QPainterPath, QFontDatabase)
+                          QLinearGradient, QBrush, QPainterPath, QFontDatabase, QRegion)
 from backend.controller import InputController
 from backend.recognizer import SpeechRecognizer, RecognitionEngine
 
 
-# Google Sound Bars - Light Theme Colors (lấy cảm hứng từ logo)
-class Colors:
-    """Bảng màu theo phong cách Google Sound Bars trên nền sáng"""
-    # Backgrounds - Light
-    BG_MAIN = "#FFFFFF"
-    BG_SURFACE = "#F8F9FA"
-    BG_ELEVATED = "#F1F3F4"
-    BG_HOVER = "#E8EAED"
-    BG_ACTIVE = "#DADCE0"
+# ============================================================
+# Theme System - Dual theme với palette 4 màu Google
+# ============================================================
+
+class ThemeColors:
+    """Bảng màu theo phong cách Google Sound Bars, hỗ trợ light/dark"""
     
-    # Borders
-    BORDER = "#DADCE0"
-    DIVIDER = "#E8EAED"
-    
-    # Text
-    TEXT_PRIMARY = "#202124"
-    TEXT_SECONDARY = "#5F6368"
-    TEXT_DISABLED = "#9AA0A6"
-    
-    # Google Accent Colors (từ logo)
+    # Google Accent Colors (cố định cả 2 theme, lấy từ logo)
     BLUE = "#4285F4"
     BLUE_HOVER = "#5A95F5"
     BLUE_LIGHT = "#D2E3FC"
+    BLUE_DARK_BG = "#394457"
     GREEN = "#34A853"
     GREEN_HOVER = "#46B864"
     GREEN_LIGHT = "#CEEAD6"
+    GREEN_DARK_BG = "#2D4A37"
     RED = "#EA4335"
     RED_HOVER = "#EC5B4E"
     RED_LIGHT = "#FAD2CF"
+    RED_DARK_BG = "#4A2D2A"
     YELLOW = "#FBBC04"
     YELLOW_HOVER = "#FCC934"
-    YELLOW_LIGHT = "#FEF7E0"
-    
-    # Selection
-    SELECTED = "#D2E3FC"
-    SELECTED_HOVER = "#AECBFA"
 
+    # Theme-specific colors
+    THEMES = {
+        "light": {
+            "BG_MAIN":       "#FFFFFF",
+            "BG_SURFACE":    "#F8F9FA",
+            "BG_ELEVATED":   "#F1F3F4",
+            "BG_HOVER":      "#E8EAED",
+            "BG_ACTIVE":     "#DADCE0",
+            "BORDER":        "#DADCE0",
+            "DIVIDER":       "#E8EAED",
+            "TEXT_PRIMARY":  "#202124",
+            "TEXT_SECONDARY":"#5F6368",
+            "TEXT_DISABLED": "#9AA0A6",
+            "SELECTED":     "#D2E3FC",
+            "SELECTED_HOVER":"#AECBFA",
+            "SHADOW_ALPHA":  30,
+            "TITLE_BAR":     "#F8F9FA",
+        },
+        "dark": {
+            "BG_MAIN":       "#1E1E1E",
+            "BG_SURFACE":    "#2A2A2A",
+            "BG_ELEVATED":   "#333333",
+            "BG_HOVER":      "#3C3C3C",
+            "BG_ACTIVE":     "#484848",
+            "BORDER":        "#444444",
+            "DIVIDER":       "#3C3C3C",
+            "TEXT_PRIMARY":  "#E8EAED",
+            "TEXT_SECONDARY":"#9AA0A6",
+            "TEXT_DISABLED": "#5F6368",
+            "SELECTED":     "#394457",
+            "SELECTED_HOVER":"#44526A",
+            "SHADOW_ALPHA":  60,
+            "TITLE_BAR":     "#2A2A2A",
+        },
+    }
+
+
+class Theme:
+    """Singleton quản lý theme hiện tại"""
+    _current = "light"
+    
+    @classmethod
+    def current(cls):
+        return cls._current
+    
+    @classmethod
+    def toggle(cls):
+        cls._current = "dark" if cls._current == "light" else "light"
+        return cls._current
+    
+    @classmethod
+    def get(cls, key):
+        return ThemeColors.THEMES[cls._current][key]
+    
+    @classmethod
+    def is_dark(cls):
+        return cls._current == "dark"
+
+
+# ============================================================
+# Custom Widgets
+# ============================================================
 
 class SoundBarsWidget(QWidget):
     """Widget vẽ các thanh sóng âm thanh giống logo, animated khi active"""
     
-    # Màu sắc 5 thanh giống logo: xanh dương, xanh lá, vàng, đỏ, xanh dương
-    BAR_COLORS = [Colors.BLUE, Colors.GREEN, Colors.YELLOW, Colors.RED, Colors.BLUE]
-    # Chiều cao tỉ lệ 5 thanh (tĩnh): ngắn, cao, cao nhất, cao, ngắn
+    BAR_COLORS = [ThemeColors.BLUE, ThemeColors.GREEN, ThemeColors.YELLOW, ThemeColors.RED, ThemeColors.BLUE]
     BASE_HEIGHTS = [0.4, 0.7, 1.0, 0.7, 0.4]
     
     def __init__(self, size=48, parent=None):
@@ -120,7 +166,6 @@ class SoundBarsWidget(QWidget):
             painter.setBrush(QColor(self.BAR_COLORS[i]))
             painter.setPen(Qt.NoPen)
             
-            # Vẽ thanh bo tròn giống logo
             radius = bar_width / 2
             path = QPainterPath()
             path.addRoundedRect(x, y, bar_width, h, radius, radius)
@@ -137,31 +182,33 @@ class AudioLevelBar(QProgressBar):
         self.setValue(0)
         self.setTextVisible(False)
         self.setFixedHeight(6)
-        
+        self.apply_theme()
+    
+    def apply_theme(self):
         self.setStyleSheet(f"""
             QProgressBar {{
-                background-color: {Colors.BG_ELEVATED};
+                background-color: {Theme.get('BG_ELEVATED')};
                 border: none;
                 border-radius: 3px;
             }}
             QProgressBar::chunk {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 {Colors.BLUE},
-                    stop:0.33 {Colors.GREEN},
-                    stop:0.66 {Colors.YELLOW},
-                    stop:1 {Colors.RED});
+                    stop:0 {ThemeColors.BLUE},
+                    stop:0.33 {ThemeColors.GREEN},
+                    stop:0.66 {ThemeColors.YELLOW},
+                    stop:1 {ThemeColors.RED});
                 border-radius: 3px;
             }}
         """)
 
 
 class StatusIndicator(QWidget):
-    """Indicator trạng thái với animation pulse - dùng màu Google"""
+    """Indicator trạng thái với animation pulse"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(14, 14)
-        self._color = Colors.TEXT_DISABLED
+        self._color = Theme.get('TEXT_DISABLED')
         self._is_active = False
         
         self._opacity = 1.0
@@ -172,17 +219,17 @@ class StatusIndicator(QWidget):
     def set_active(self, active: bool):
         self._is_active = active
         if active:
-            self._color = Colors.GREEN
+            self._color = ThemeColors.GREEN
             self._animation.start(50)
         else:
-            self._color = Colors.TEXT_DISABLED
+            self._color = Theme.get('TEXT_DISABLED')
             self._animation.stop()
             self._opacity = 1.0
         self.update()
     
     def set_recording(self, recording: bool):
         if recording:
-            self._color = Colors.RED
+            self._color = ThemeColors.RED
             self._animation.start(50)
         else:
             self.set_active(False)
@@ -198,19 +245,22 @@ class StatusIndicator(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        
         painter.setOpacity(self._opacity)
         painter.setBrush(QColor(self._color))
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(2, 2, 10, 10)
-        
         if self._is_active:
             painter.setOpacity(self._opacity * 0.3)
             painter.drawEllipse(0, 0, 14, 14)
+    
+    def apply_theme(self):
+        if not self._is_active:
+            self._color = Theme.get('TEXT_DISABLED')
+            self.update()
 
 
 class ModernButton(QPushButton):
-    """Button với phong cách Google Material trên nền sáng"""
+    """Button với phong cách Google Material, hỗ trợ theme"""
     
     def __init__(self, text, parent=None, primary=False, danger=False):
         super().__init__(text, parent)
@@ -222,17 +272,17 @@ class ModernButton(QPushButton):
         
     def _update_style(self):
         if self.danger:
-            bg = Colors.RED
-            bg_hover = Colors.RED_HOVER
+            bg = ThemeColors.RED
+            bg_hover = ThemeColors.RED_HOVER
             text_color = "#FFFFFF"
         elif self.primary:
-            bg = Colors.BLUE
-            bg_hover = Colors.BLUE_HOVER
+            bg = ThemeColors.BLUE
+            bg_hover = ThemeColors.BLUE_HOVER
             text_color = "#FFFFFF"
         else:
-            bg = Colors.BG_ELEVATED
-            bg_hover = Colors.BG_HOVER
-            text_color = Colors.TEXT_PRIMARY
+            bg = Theme.get('BG_ELEVATED')
+            bg_hover = Theme.get('BG_HOVER')
+            text_color = Theme.get('TEXT_PRIMARY')
         
         self.setStyleSheet(f"""
             QPushButton {{
@@ -248,39 +298,40 @@ class ModernButton(QPushButton):
                 background-color: {bg_hover};
             }}
             QPushButton:pressed {{
-                background-color: {Colors.BG_ACTIVE if not self.primary and not self.danger else bg};
-                opacity: 0.9;
+                background-color: {Theme.get('BG_ACTIVE') if not self.primary and not self.danger else bg};
             }}
             QPushButton:disabled {{
-                background-color: {Colors.BG_ELEVATED};
-                color: {Colors.TEXT_DISABLED};
+                background-color: {Theme.get('BG_ELEVATED')};
+                color: {Theme.get('TEXT_DISABLED')};
             }}
         """)
 
 
 class ModernComboBox(QComboBox):
-    """ComboBox với phong cách Google Material trên nền sáng"""
+    """ComboBox với phong cách Google Material, hỗ trợ theme"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(36)
         self.setCursor(Qt.PointingHandCursor)
-        
+        self.apply_theme()
+    
+    def apply_theme(self):
         self.setStyleSheet(f"""
             QComboBox {{
-                background-color: {Colors.BG_SURFACE};
-                color: {Colors.TEXT_PRIMARY};
-                border: 1px solid {Colors.BORDER};
+                background-color: {Theme.get('BG_SURFACE')};
+                color: {Theme.get('TEXT_PRIMARY')};
+                border: 1px solid {Theme.get('BORDER')};
                 border-radius: 18px;
                 padding: 6px 14px;
                 font-size: 13px;
             }}
             QComboBox:hover {{
-                background-color: {Colors.BG_ELEVATED};
-                border-color: {Colors.BLUE};
+                background-color: {Theme.get('BG_ELEVATED')};
+                border-color: {ThemeColors.BLUE};
             }}
             QComboBox:focus {{
-                border-color: {Colors.BLUE};
+                border-color: {ThemeColors.BLUE};
                 border-width: 2px;
             }}
             QComboBox::drop-down {{
@@ -291,36 +342,47 @@ class ModernComboBox(QComboBox):
                 image: none;
                 border-left: 5px solid transparent;
                 border-right: 5px solid transparent;
-                border-top: 6px solid {Colors.TEXT_SECONDARY};
+                border-top: 6px solid {Theme.get('TEXT_SECONDARY')};
                 margin-right: 10px;
             }}
             QComboBox QAbstractItemView {{
-                background-color: {Colors.BG_MAIN};
-                color: {Colors.TEXT_PRIMARY};
-                border: 1px solid {Colors.BORDER};
+                background-color: {Theme.get('BG_MAIN')};
+                color: {Theme.get('TEXT_PRIMARY')};
+                border: 1px solid {Theme.get('BORDER')};
                 border-radius: 12px;
                 padding: 4px;
-                selection-background-color: {Colors.SELECTED};
-                selection-color: {Colors.BLUE};
+                selection-background-color: {Theme.get('SELECTED')};
+                selection-color: {ThemeColors.BLUE};
             }}
             QComboBox QAbstractItemView::item {{
                 padding: 8px 14px;
                 border-radius: 8px;
             }}
             QComboBox QAbstractItemView::item:hover {{
-                background-color: {Colors.BG_HOVER};
+                background-color: {Theme.get('BG_HOVER')};
             }}
         """)
 
 
+# ============================================================
+# Main Window - Frameless, Custom Title Bar, Dual Theme
+# ============================================================
+
 class MainWindow(QMainWindow):
-    """Giao diện chính với phong cách Google Sound Bars (Light Theme)"""
+    """Giao diện chính - Frameless, Custom Title Bar, Google Sound Bars Theme"""
+    
+    TITLE_BAR_HEIGHT = 40
+    BORDER_RADIUS = 16
     
     def __init__(self):
         super().__init__()
         self.setWindowTitle("VoiceTyping")
-        self.setMinimumSize(440, 380)
-        self.setMaximumSize(600, 520)
+        self.setMinimumSize(440, 400)
+        self.setMaximumSize(600, 540)
+        
+        # Frameless window
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
         
         # Tìm logo file
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -332,8 +394,8 @@ class MainWindow(QMainWindow):
         elif os.path.exists(self._logo_path):
             self.setWindowIcon(QIcon(self._logo_path))
         
-        # Flags - Giữ cửa sổ luôn trên cùng
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        # Thu thập tất cả widget cần apply theme
+        self._themed_widgets = []
         
         self.setup_ui()
         self.setup_tray()
@@ -355,6 +417,12 @@ class MainWindow(QMainWindow):
         
         # Drag support
         self._drag_pos = None
+        
+        # Resize support
+        self._resize_edge = None
+        self._resize_margin = 6
+    
+    # ===== Tray =====
     
     def setup_tray(self):
         """Thiết lập System Tray Icon"""
@@ -368,27 +436,10 @@ class MainWindow(QMainWindow):
         
         self.tray_icon.setToolTip("VoiceTyping - Nhập văn bản bằng giọng nói")
         
-        # Tạo menu cho tray - light theme
         tray_menu = QMenu()
-        tray_menu.setStyleSheet(f"""
-            QMenu {{
-                background-color: {Colors.BG_MAIN};
-                color: {Colors.TEXT_PRIMARY};
-                border: 1px solid {Colors.BORDER};
-                border-radius: 12px;
-                padding: 4px;
-            }}
-            QMenu::item {{
-                padding: 8px 20px;
-                border-radius: 6px;
-            }}
-            QMenu::item:selected {{
-                background-color: {Colors.BLUE_LIGHT};
-                color: {Colors.BLUE};
-            }}
-        """)
+        self._tray_menu = tray_menu
+        self._apply_tray_theme()
         
-        # Actions
         show_action = tray_menu.addAction("🖥️ Hiển thị")
         show_action.triggered.connect(self.show_window)
         
@@ -407,14 +458,31 @@ class MainWindow(QMainWindow):
         self.tray_icon.activated.connect(self.on_tray_activated)
         self.tray_icon.show()
     
+    def _apply_tray_theme(self):
+        self._tray_menu.setStyleSheet(f"""
+            QMenu {{
+                background-color: {Theme.get('BG_MAIN')};
+                color: {Theme.get('TEXT_PRIMARY')};
+                border: 1px solid {Theme.get('BORDER')};
+                border-radius: 12px;
+                padding: 4px;
+            }}
+            QMenu::item {{
+                padding: 8px 20px;
+                border-radius: 6px;
+            }}
+            QMenu::item:selected {{
+                background-color: {ThemeColors.BLUE_LIGHT if not Theme.is_dark() else ThemeColors.BLUE_DARK_BG};
+                color: {ThemeColors.BLUE};
+            }}
+        """)
+    
     def show_window(self):
-        """Hiển thị cửa sổ từ tray"""
         self.show()
         self.activateWindow()
         self.raise_()
     
     def on_tray_activated(self, reason):
-        """Xử lý khi click vào tray icon"""
         if reason == QSystemTrayIcon.DoubleClick:
             self.show_window()
         elif reason == QSystemTrayIcon.Trigger:
@@ -424,13 +492,11 @@ class MainWindow(QMainWindow):
                 self.stop_recognition()
     
     def quit_app(self):
-        """Thoát ứng dụng hoàn toàn"""
         self.recognizer.cleanup()
         self.tray_icon.hide()
         QApplication.quit()
     
     def changeEvent(self, event):
-        """Minimize vào tray thay vì taskbar"""
         if event.type() == event.WindowStateChange:
             if self.windowState() & Qt.WindowMinimized:
                 self.hide()
@@ -442,144 +508,141 @@ class MainWindow(QMainWindow):
                 )
         super().changeEvent(event)
     
+    # ===== UI Setup =====
+    
     def setup_ui(self):
-        """Thiết lập giao diện - Google Sound Bars Light Theme"""
-        # Main container với nền trắng, bo tròn, shadow
-        container = QWidget()
-        container.setObjectName("mainContainer")
-        container.setStyleSheet(f"""
-            #mainContainer {{
-                background-color: {Colors.BG_MAIN};
-                border-radius: 20px;
-                border: 1px solid {Colors.DIVIDER};
-            }}
-        """)
+        """Thiết lập giao diện - Frameless + Custom Title Bar"""
+        # Outer wrapper (transparent background for rounded corners)
+        outer = QWidget()
+        outer.setObjectName("outerWrapper")
+        self.setCentralWidget(outer)
         
-        # Shadow effect - nhẹ nhàng cho light theme
+        outer_layout = QVBoxLayout(outer)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+        
+        # Main container với bo tròn
+        self._container = QWidget()
+        self._container.setObjectName("mainContainer")
+        outer_layout.addWidget(self._container)
+        
+        # Shadow
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(40)
-        shadow.setColor(QColor(0, 0, 0, 30))
+        shadow.setColor(QColor(0, 0, 0, Theme.get('SHADOW_ALPHA')))
         shadow.setOffset(0, 4)
-        container.setGraphicsEffect(shadow)
+        self._container.setGraphicsEffect(shadow)
         
-        self.setCentralWidget(container)
+        container_layout = QVBoxLayout(self._container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
         
-        main_layout = QVBoxLayout(container)
-        main_layout.setContentsMargins(24, 20, 24, 20)
-        main_layout.setSpacing(16)
+        # ===== Custom Title Bar =====
+        self._title_bar = self._create_title_bar()
+        container_layout.addWidget(self._title_bar)
         
-        # ===== Header =====
-        header = self._create_header()
-        main_layout.addLayout(header)
+        # ===== Content Area =====
+        content = QWidget()
+        content.setObjectName("contentArea")
+        container_layout.addWidget(content)
         
-        # ===== Divider =====
-        divider = QFrame()
-        divider.setFixedHeight(1)
-        divider.setStyleSheet(f"background-color: {Colors.DIVIDER};")
-        main_layout.addWidget(divider)
+        self._content_widget = content
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(24, 12, 24, 20)
+        content_layout.setSpacing(14)
         
-        # ===== Center: Sound Bars + Status =====
+        # Center: Sound Bars + Status
         center_layout = self._create_center_section()
-        main_layout.addLayout(center_layout)
+        content_layout.addLayout(center_layout)
         
-        # ===== Audio Level =====
+        # Audio Level
         self.audio_level_bar = AudioLevelBar()
-        main_layout.addWidget(self.audio_level_bar)
+        self._themed_widgets.append(self.audio_level_bar)
+        content_layout.addWidget(self.audio_level_bar)
         
-        # ===== Controls =====
+        # Controls
         controls = self._create_controls()
-        main_layout.addLayout(controls)
+        content_layout.addLayout(controls)
         
-        # ===== Settings =====
+        # Settings
         settings = self._create_settings()
-        main_layout.addLayout(settings)
+        content_layout.addLayout(settings)
         
-        main_layout.addStretch()
+        content_layout.addStretch()
         
-        # ===== Footer =====
+        # Footer
         footer = self._create_footer()
-        main_layout.addLayout(footer)
+        content_layout.addLayout(footer)
+        
+        # Apply theme lần đầu
+        self._apply_container_theme()
     
-    def _create_header(self) -> QHBoxLayout:
-        """Tạo header với logo PNG, title và nút đóng"""
-        layout = QHBoxLayout()
+    def _create_title_bar(self) -> QWidget:
+        """Custom title bar thay thế title bar mặc định"""
+        bar = QWidget()
+        bar.setObjectName("titleBar")
+        bar.setFixedHeight(self.TITLE_BAR_HEIGHT)
         
-        # Logo + Title
-        title_layout = QHBoxLayout()
-        title_layout.setSpacing(10)
+        layout = QHBoxLayout(bar)
+        layout.setContentsMargins(16, 0, 8, 0)
+        layout.setSpacing(8)
         
-        # Logo image từ file
-        logo_label = QLabel()
+        # Logo image
+        self._logo_label = QLabel()
         if os.path.exists(self._logo_path):
             pixmap = QPixmap(self._logo_path)
-            logo_label.setPixmap(pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        logo_label.setFixedSize(32, 32)
-        title_layout.addWidget(logo_label)
+            self._logo_label.setPixmap(pixmap.scaled(22, 22, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self._logo_label.setFixedSize(24, 24)
+        layout.addWidget(self._logo_label)
         
-        # Status indicator (nhỏ, ẩn sau logo)
+        # Status indicator
         self.status_indicator = StatusIndicator()
-        title_layout.addWidget(self.status_indicator)
+        self._themed_widgets.append(self.status_indicator)
+        layout.addWidget(self.status_indicator)
         
-        # Title
-        title = QLabel("VoiceTyping")
-        title.setStyleSheet(f"""
-            color: {Colors.TEXT_PRIMARY};
-            font-size: 18px;
-            font-weight: 700;
-        """)
-        title_layout.addWidget(title)
+        # Title text
+        self._title_label = QLabel("VoiceTyping")
+        self._title_label.setObjectName("titleLabel")
+        layout.addWidget(self._title_label)
         
-        layout.addLayout(title_layout)
         layout.addStretch()
         
+        # Theme toggle button (sun/moon)
+        self._theme_btn = QPushButton("🌙")
+        self._theme_btn.setObjectName("titleBtn")
+        self._theme_btn.setFixedSize(30, 30)
+        self._theme_btn.setCursor(Qt.PointingHandCursor)
+        self._theme_btn.setToolTip("Chuyển chế độ sáng/tối")
+        self._theme_btn.clicked.connect(self._toggle_theme)
+        layout.addWidget(self._theme_btn)
+        
         # Minimize button
-        min_btn = QPushButton("─")
-        min_btn.setFixedSize(32, 32)
-        min_btn.setCursor(Qt.PointingHandCursor)
-        min_btn.clicked.connect(self.showMinimized)
-        min_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                color: {Colors.TEXT_SECONDARY};
-                border: none;
-                border-radius: 16px;
-                font-size: 14px;
-            }}
-            QPushButton:hover {{
-                background-color: {Colors.BG_HOVER};
-            }}
-        """)
-        layout.addWidget(min_btn)
+        self._min_btn = QPushButton("─")
+        self._min_btn.setObjectName("titleBtn")
+        self._min_btn.setFixedSize(30, 30)
+        self._min_btn.setCursor(Qt.PointingHandCursor)
+        self._min_btn.setToolTip("Thu nhỏ")
+        self._min_btn.clicked.connect(self.showMinimized)
+        layout.addWidget(self._min_btn)
         
         # Close button
-        close_btn = QPushButton("✕")
-        close_btn.setFixedSize(32, 32)
-        close_btn.setCursor(Qt.PointingHandCursor)
-        close_btn.clicked.connect(self.close)
-        close_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                color: {Colors.TEXT_SECONDARY};
-                border: none;
-                border-radius: 16px;
-                font-size: 14px;
-            }}
-            QPushButton:hover {{
-                background-color: {Colors.RED_LIGHT};
-                color: {Colors.RED};
-            }}
-        """)
-        layout.addWidget(close_btn)
+        self._close_btn = QPushButton("✕")
+        self._close_btn.setObjectName("closeBtn")
+        self._close_btn.setFixedSize(30, 30)
+        self._close_btn.setCursor(Qt.PointingHandCursor)
+        self._close_btn.setToolTip("Đóng")
+        self._close_btn.clicked.connect(self.close)
+        layout.addWidget(self._close_btn)
         
-        return layout
+        return bar
     
     def _create_center_section(self) -> QVBoxLayout:
-        """Tạo phần trung tâm với Sound Bars widget và status"""
+        """Phần trung tâm: Sound Bars + Status"""
         layout = QVBoxLayout()
-        layout.setSpacing(12)
+        layout.setSpacing(10)
         layout.setAlignment(Qt.AlignCenter)
         
-        # Sound Bars widget (animation giống logo)
+        # Sound Bars widget
         bars_container = QHBoxLayout()
         bars_container.setAlignment(Qt.AlignCenter)
         self.sound_bars = SoundBarsWidget(size=56)
@@ -588,25 +651,14 @@ class MainWindow(QMainWindow):
         
         # Status label
         self.status_label = QLabel("Sẵn sàng")
-        self.status_label.setStyleSheet(f"""
-            color: {Colors.TEXT_SECONDARY};
-            font-size: 14px;
-            font-weight: 500;
-        """)
+        self.status_label.setObjectName("statusLabel")
         self.status_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.status_label)
         
         # Last recognized text
         self.last_text_label = QLabel("")
+        self.last_text_label.setObjectName("lastTextLabel")
         self.last_text_label.setWordWrap(True)
-        self.last_text_label.setStyleSheet(f"""
-            color: {Colors.TEXT_PRIMARY};
-            font-size: 13px;
-            background-color: {Colors.BG_SURFACE};
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid {Colors.DIVIDER};
-        """)
         self.last_text_label.setAlignment(Qt.AlignCenter)
         self.last_text_label.setMinimumHeight(50)
         self.last_text_label.setMaximumHeight(120)
@@ -617,105 +669,173 @@ class MainWindow(QMainWindow):
         return layout
     
     def _create_controls(self) -> QHBoxLayout:
-        """Tạo các nút điều khiển"""
         layout = QHBoxLayout()
         layout.setSpacing(12)
         layout.setAlignment(Qt.AlignCenter)
         
-        # Start/Stop button - bo tròn pill shape
         self.toggle_btn = ModernButton("🎤 Bắt đầu", primary=True)
         self.toggle_btn.setMinimumWidth(180)
         self.toggle_btn.clicked.connect(self.toggle_recognition)
+        self._themed_widgets.append(self.toggle_btn)
         layout.addWidget(self.toggle_btn)
         
         return layout
     
     def _create_settings(self) -> QHBoxLayout:
-        """Tạo phần cài đặt"""
         layout = QHBoxLayout()
         layout.setSpacing(12)
         
-        # Language selector
-        lang_label = QLabel("Ngôn ngữ:")
-        lang_label.setStyleSheet(f"color: {Colors.TEXT_SECONDARY}; font-size: 13px;")
-        layout.addWidget(lang_label)
+        self._lang_label = QLabel("Ngôn ngữ:")
+        self._lang_label.setObjectName("settingsLabel")
+        layout.addWidget(self._lang_label)
         
         self.lang_combo = ModernComboBox()
         self.lang_combo.addItems(["Tiếng Việt", "English"])
         self.lang_combo.currentIndexChanged.connect(self.on_language_changed)
+        self._themed_widgets.append(self.lang_combo)
         layout.addWidget(self.lang_combo)
         
         layout.addStretch()
         
-        # Engine selector
-        engine_label = QLabel("Engine:")
-        engine_label.setStyleSheet(f"color: {Colors.TEXT_SECONDARY}; font-size: 13px;")
-        layout.addWidget(engine_label)
+        self._engine_label = QLabel("Engine:")
+        self._engine_label.setObjectName("settingsLabel")
+        layout.addWidget(self._engine_label)
         
         self.engine_combo = ModernComboBox()
         self.engine_combo.addItems(["Google", "Whisper", "Faster-Whisper"])
         self.engine_combo.currentIndexChanged.connect(self.on_engine_changed)
+        self._themed_widgets.append(self.engine_combo)
         layout.addWidget(self.engine_combo)
         
         return layout
     
     def _create_footer(self) -> QHBoxLayout:
-        """Tạo footer"""
         layout = QHBoxLayout()
         
-        # Shortcut hint - dùng tag màu Google
-        hint = QLabel("💡 Giữ phím Alt để nói")
-        hint.setStyleSheet(f"""
-            color: {Colors.TEXT_DISABLED};
-            font-size: 12px;
-        """)
-        layout.addWidget(hint)
+        self._hint_label = QLabel("💡 Giữ phím Alt để nói")
+        self._hint_label.setObjectName("footerLabel")
+        layout.addWidget(self._hint_label)
         
         layout.addStretch()
         
-        # 4 chấm màu Google nhỏ làm trang trí
-        dots_label = QLabel("● ● ● ●")
-        dots_label.setStyleSheet(f"""
-            color: {Colors.TEXT_DISABLED};
-            font-size: 6px;
-            letter-spacing: 2px;
-        """)
-        layout.addWidget(dots_label)
-        
-        layout.addStretch()
-        
-        # Version
-        version = QLabel("v1.0.0")
-        version.setStyleSheet(f"""
-            color: {Colors.TEXT_DISABLED};
-            font-size: 11px;
-        """)
-        layout.addWidget(version)
+        self._version_label = QLabel("v1.0.0")
+        self._version_label.setObjectName("footerLabel")
+        layout.addWidget(self._version_label)
         
         return layout
     
     def setup_connections(self):
-        """Thiết lập kết nối signals"""
         pass
+    
+    # ===== Theme Management =====
+    
+    def _toggle_theme(self):
+        """Chuyển đổi giữa light và dark theme"""
+        Theme.toggle()
+        self._theme_btn.setText("☀️" if Theme.is_dark() else "🌙")
+        self._apply_all_theme()
+    
+    def _apply_all_theme(self):
+        """Áp dụng theme cho toàn bộ giao diện"""
+        self._apply_container_theme()
+        self._apply_tray_theme()
+        
+        # Apply cho các widget có method apply_theme
+        for w in self._themed_widgets:
+            if hasattr(w, 'apply_theme'):
+                w.apply_theme()
+            elif isinstance(w, ModernButton):
+                w._update_style()
+    
+    def _apply_container_theme(self):
+        """Áp dụng style cho container chính và tất cả label"""
+        r = self.BORDER_RADIUS
+        
+        self._container.setStyleSheet(f"""
+            #mainContainer {{
+                background-color: {Theme.get('BG_MAIN')};
+                border-radius: {r}px;
+                border: 1px solid {Theme.get('BORDER')};
+            }}
+            #titleBar {{
+                background-color: {Theme.get('TITLE_BAR')};
+                border-top-left-radius: {r}px;
+                border-top-right-radius: {r}px;
+                border-bottom: 1px solid {Theme.get('DIVIDER')};
+            }}
+            #titleLabel {{
+                color: {Theme.get('TEXT_PRIMARY')};
+                font-size: 14px;
+                font-weight: 700;
+                background: transparent;
+            }}
+            #titleBtn {{
+                background-color: transparent;
+                color: {Theme.get('TEXT_SECONDARY')};
+                border: none;
+                border-radius: 15px;
+                font-size: 13px;
+            }}
+            #titleBtn:hover {{
+                background-color: {Theme.get('BG_HOVER')};
+            }}
+            #closeBtn {{
+                background-color: transparent;
+                color: {Theme.get('TEXT_SECONDARY')};
+                border: none;
+                border-radius: 15px;
+                font-size: 13px;
+            }}
+            #closeBtn:hover {{
+                background-color: {ThemeColors.RED_LIGHT if not Theme.is_dark() else ThemeColors.RED_DARK_BG};
+                color: {ThemeColors.RED};
+            }}
+            #contentArea {{
+                background-color: {Theme.get('BG_MAIN')};
+                border-bottom-left-radius: {r}px;
+                border-bottom-right-radius: {r}px;
+            }}
+            #statusLabel {{
+                color: {Theme.get('TEXT_SECONDARY')};
+                font-size: 14px;
+                font-weight: 500;
+                background: transparent;
+            }}
+            #lastTextLabel {{
+                color: {Theme.get('TEXT_PRIMARY')};
+                font-size: 13px;
+                background-color: {Theme.get('BG_SURFACE')};
+                padding: 12px 16px;
+                border-radius: 12px;
+                border: 1px solid {Theme.get('DIVIDER')};
+            }}
+            #settingsLabel {{
+                color: {Theme.get('TEXT_SECONDARY')};
+                font-size: 13px;
+                background: transparent;
+            }}
+            #footerLabel {{
+                color: {Theme.get('TEXT_DISABLED')};
+                font-size: 11px;
+                background: transparent;
+            }}
+        """)
     
     # ===== Event Handlers =====
     
     def toggle_recognition(self):
-        """Bật/tắt nhận dạng giọng nói"""
         if self.toggle_btn.text().startswith("🎤"):
             self.start_recognition()
         else:
             self.stop_recognition()
     
     def on_alt_pressed(self, pressed: bool):
-        """Xử lý nhấn phím Alt"""
         if pressed:
             self.start_recognition()
         else:
             self.stop_recognition()
     
     def start_recognition(self):
-        """Bắt đầu nhận dạng"""
         self.toggle_btn.setText("⏹ Dừng")
         self.toggle_btn.primary = False
         self.toggle_btn.danger = True
@@ -725,7 +845,6 @@ class MainWindow(QMainWindow):
         self.recognizer.start_listening()
     
     def stop_recognition(self):
-        """Dừng nhận dạng"""
         self.toggle_btn.setText("🎤 Bắt đầu")
         self.toggle_btn.primary = True
         self.toggle_btn.danger = False
@@ -736,68 +855,57 @@ class MainWindow(QMainWindow):
         self.audio_level_bar.setValue(0)
     
     def on_listening_started(self):
-        """Xử lý khi bắt đầu lắng nghe"""
         self.status_indicator.set_recording(True)
         self.sound_bars.set_recording(True)
     
     def on_listening_stopped(self):
-        """Xử lý khi dừng lắng nghe"""
         self.status_indicator.set_active(False)
         self.sound_bars.set_active(False)
     
     def on_status_changed(self, status: str):
-        """Cập nhật trạng thái"""
         self.status_label.setText(status)
     
     def on_error(self, error: str):
-        """Hiển thị lỗi"""
         self.status_label.setText(f"❌ {error}")
-        self.status_label.setStyleSheet(f"color: {Colors.RED}; font-size: 14px; font-weight: 500;")
+        self.status_label.setStyleSheet(f"color: {ThemeColors.RED}; font-size: 14px; font-weight: 500; background: transparent;")
         QTimer.singleShot(3000, lambda: self.status_label.setStyleSheet(
-            f"color: {Colors.TEXT_SECONDARY}; font-size: 14px; font-weight: 500;"
+            f"color: {Theme.get('TEXT_SECONDARY')}; font-size: 14px; font-weight: 500; background: transparent;"
         ))
     
     def on_audio_level(self, level: float):
-        """Cập nhật mức âm thanh"""
         self.audio_level_bar.setValue(int(level * 100))
     
     def on_text_recognized(self, text: str):
-        """Hiển thị văn bản đã nhận dạng"""
         self.last_text_label.setText(f'"{text}"')
         self.last_text_label.show()
-        # Ẩn sau 5 giây
         QTimer.singleShot(5000, self.last_text_label.hide)
     
     def on_language_changed(self, index: int):
-        """Đổi ngôn ngữ"""
         languages = ["vi-VN", "en-US"]
         self.recognizer.set_language(languages[index])
     
     def on_engine_changed(self, index: int):
-        """Đổi engine nhận dạng"""
         engines = [RecognitionEngine.GOOGLE, RecognitionEngine.WHISPER, RecognitionEngine.FASTER_WHISPER]
         self.recognizer.set_engine(engines[index])
     
-    # ===== Window Drag Support =====
+    # ===== Window Drag (trên title bar) =====
     
     def mousePressEvent(self, event):
-        """Bắt đầu kéo cửa sổ"""
         if event.button() == Qt.LeftButton:
-            self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
-            event.accept()
+            # Chỉ cho kéo trên vùng title bar
+            if event.pos().y() <= self.TITLE_BAR_HEIGHT:
+                self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
+                event.accept()
     
     def mouseMoveEvent(self, event):
-        """Kéo cửa sổ"""
         if event.buttons() == Qt.LeftButton and self._drag_pos:
             self.move(event.globalPos() - self._drag_pos)
             event.accept()
     
     def mouseReleaseEvent(self, event):
-        """Kết thúc kéo cửa sổ"""
         self._drag_pos = None
     
     def closeEvent(self, event):
-        """Cleanup khi đóng"""
         self.recognizer.cleanup()
         event.accept()
 
@@ -805,10 +913,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    
-    # Set application font
     app.setFont(QFont("Segoe UI", 10))
-    
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
