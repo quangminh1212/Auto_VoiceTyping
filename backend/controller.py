@@ -19,7 +19,7 @@ class InputController(QObject):
         super().__init__()
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_alt_state)
-        self.timer.start(50)  # Kiểm tra mỗi 50ms
+        self.timer.start(30)  # Kiểm tra mỗi 30ms - giảm để responsive hơn
         self.last_alt_state = False
         self.pending_text = None
         self.is_processing = False  # Flag để tránh xử lý trùng lặp
@@ -43,7 +43,7 @@ class InputController(QObject):
         print(f"[Controller] Đã nhận văn bản: {text}")
         
         # Đợi người dùng thả Alt rồi mới paste
-        QTimer.singleShot(300, self._check_and_type)
+        QTimer.singleShot(100, self._check_and_type)
 
     def _check_and_type(self):
         """Kiểm tra và paste khi Alt đã thả"""
@@ -62,7 +62,7 @@ class InputController(QObject):
         self._do_paste(text_to_paste)
         
         # Đợi một chút trước khi cho phép xử lý tiếp
-        QTimer.singleShot(500, self._reset_processing)
+        QTimer.singleShot(200, self._reset_processing)
 
     def _reset_processing(self):
         """Reset flag processing"""
