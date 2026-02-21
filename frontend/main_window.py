@@ -323,7 +323,6 @@ class ModernComboBox(QComboBox):
         list_view.setMouseTracking(True)
         list_view.setCursor(Qt.PointingHandCursor)
         list_view.setFrameShape(QFrame.NoFrame)
-        # Ẩn scrollbar để đồng bộ giao diện
         list_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         list_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setView(list_view)
@@ -332,26 +331,32 @@ class ModernComboBox(QComboBox):
         self.apply_theme()
     
     def showPopup(self):
-        """Override để style popup container và resize cho vừa"""
+        """Override để thêm shadow và resize popup"""
         super().showPopup()
-        # Đảm bảo popup rộng bằng combobox
         popup = self.view().window()
         if popup and popup is not self:
             popup.setMinimumWidth(self.width())
+            # Thêm shadow cho popup
+            shadow = QGraphicsDropShadowEffect()
+            shadow.setBlurRadius(16)
+            shadow.setColor(QColor(0, 0, 0, 50 if not Theme.is_dark() else 80))
+            shadow.setOffset(0, 4)
+            popup.setGraphicsEffect(shadow)
     
     def apply_theme(self):
-        sel_bg = ThemeColors.BLUE_LIGHT if not Theme.is_dark() else ThemeColors.BLUE_DARK_BG
-        bg = Theme.get('BG_MAIN')
-        border = Theme.get('BORDER')
+        # Màu selected rõ ràng hơn
+        sel_bg = ThemeColors.BLUE
+        sel_text = "#FFFFFF"
+        bg = Theme.get('BG_SURFACE')
+        border = Theme.get('TEXT_DISABLED')  # Border đậm hơn BORDER
         text = Theme.get('TEXT_PRIMARY')
-        hover = Theme.get('BG_HOVER')
+        hover = Theme.get('SELECTED')  # Hover dùng SELECTED cho rõ hơn
         
-        # Style cho combobox + dropdown - tất cả trong 1 stylesheet
         self.setStyleSheet(f"""
             QComboBox {{
                 background-color: {Theme.get('BG_SURFACE')};
                 color: {text};
-                border: 1px solid {border};
+                border: 1px solid {Theme.get('BORDER')};
                 border-radius: 18px;
                 padding: 6px 14px;
                 font-size: 13px;
@@ -383,7 +388,7 @@ class ModernComboBox(QComboBox):
                 padding: 6px;
                 outline: none;
                 selection-background-color: {sel_bg};
-                selection-color: {ThemeColors.BLUE};
+                selection-color: {sel_text};
             }}
             QComboBox QAbstractItemView::item {{
                 padding: 8px 14px;
@@ -395,14 +400,14 @@ class ModernComboBox(QComboBox):
             }}
             QComboBox QAbstractItemView::item:selected {{
                 background-color: {sel_bg};
-                color: {ThemeColors.BLUE};
+                color: {sel_text};
             }}
             QComboBox QAbstractItemView QScrollBar:vertical {{
                 width: 0px;
             }}
         """)
         
-        # Style riêng cho list view - đảm bảo override hoàn toàn
+        # Style riêng cho list view
         self._list_view.setStyleSheet(f"""
             QListView {{
                 background-color: {bg};
@@ -422,7 +427,7 @@ class ModernComboBox(QComboBox):
             }}
             QListView::item:selected {{
                 background-color: {sel_bg};
-                color: {ThemeColors.BLUE};
+                color: {sel_text};
             }}
         """)
 
