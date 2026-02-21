@@ -1,54 +1,134 @@
 """
-VoiceTyping - Giao diện người dùng theo phong cách Google Drive
-UI hiện đại với dark theme, animations và hiệu ứng chuyên nghiệp
+VoiceTyping - Giao diện người dùng theo phong cách Google Sound Bars
+UI hiện đại với light theme, animations sóng âm thanh và palette 4 màu Google
 """
 
+import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QPushButton, QLabel, QFrame, 
                              QProgressBar, QComboBox, QSystemTrayIcon, QMenu, QAction,
                              QGraphicsDropShadowEffect, QSizePolicy)
 from PyQt5.QtCore import Qt, QSize, QTimer, QPropertyAnimation, QEasingCurve, pyqtProperty
-from PyQt5.QtGui import (QIcon, QPalette, QColor, QFont, QPainter, 
+from PyQt5.QtGui import (QIcon, QPalette, QColor, QFont, QPainter, QPixmap,
                           QLinearGradient, QBrush, QPainterPath, QFontDatabase)
 from backend.controller import InputController
 from backend.recognizer import SpeechRecognizer, RecognitionEngine
 
 
-# Google Drive Dark Theme Colors
+# Google Sound Bars - Light Theme Colors (lấy cảm hứng từ logo)
 class Colors:
-    """Bảng màu theo phong cách Google Drive Dark Mode"""
-    # Backgrounds
-    BG_MAIN = "#1f1f1f"
-    BG_SURFACE = "#2d2d2d"
-    BG_ELEVATED = "#353535"
-    BG_HOVER = "#3c4043"
-    BG_ACTIVE = "#4a4e51"
+    """Bảng màu theo phong cách Google Sound Bars trên nền sáng"""
+    # Backgrounds - Light
+    BG_MAIN = "#FFFFFF"
+    BG_SURFACE = "#F8F9FA"
+    BG_ELEVATED = "#F1F3F4"
+    BG_HOVER = "#E8EAED"
+    BG_ACTIVE = "#DADCE0"
     
     # Borders
-    BORDER = "#5f6368"
-    DIVIDER = "#3c4043"
+    BORDER = "#DADCE0"
+    DIVIDER = "#E8EAED"
     
     # Text
-    TEXT_PRIMARY = "#e8eaed"
-    TEXT_SECONDARY = "#bdc1c6"
-    TEXT_DISABLED = "#5f6368"
+    TEXT_PRIMARY = "#202124"
+    TEXT_SECONDARY = "#5F6368"
+    TEXT_DISABLED = "#9AA0A6"
     
-    # Accent Colors
-    BLUE = "#8ab4f8"
-    BLUE_HOVER = "#aecbfa"
-    GREEN = "#81c995"
-    GREEN_HOVER = "#a8dab5"
-    RED = "#f28b82"
-    RED_HOVER = "#f6aca8"
-    YELLOW = "#fdd663"
+    # Google Accent Colors (từ logo)
+    BLUE = "#4285F4"
+    BLUE_HOVER = "#5A95F5"
+    BLUE_LIGHT = "#D2E3FC"
+    GREEN = "#34A853"
+    GREEN_HOVER = "#46B864"
+    GREEN_LIGHT = "#CEEAD6"
+    RED = "#EA4335"
+    RED_HOVER = "#EC5B4E"
+    RED_LIGHT = "#FAD2CF"
+    YELLOW = "#FBBC04"
+    YELLOW_HOVER = "#FCC934"
+    YELLOW_LIGHT = "#FEF7E0"
     
     # Selection
-    SELECTED = "#394457"
-    SELECTED_HOVER = "#44526a"
+    SELECTED = "#D2E3FC"
+    SELECTED_HOVER = "#AECBFA"
+
+
+class SoundBarsWidget(QWidget):
+    """Widget vẽ các thanh sóng âm thanh giống logo, animated khi active"""
+    
+    # Màu sắc 5 thanh giống logo: xanh dương, xanh lá, vàng, đỏ, xanh dương
+    BAR_COLORS = [Colors.BLUE, Colors.GREEN, Colors.YELLOW, Colors.RED, Colors.BLUE]
+    # Chiều cao tỉ lệ 5 thanh (tĩnh): ngắn, cao, cao nhất, cao, ngắn
+    BASE_HEIGHTS = [0.4, 0.7, 1.0, 0.7, 0.4]
+    
+    def __init__(self, size=48, parent=None):
+        super().__init__(parent)
+        self._size = size
+        self.setFixedSize(size, size)
+        self._is_active = False
+        self._is_recording = False
+        self._anim_offsets = [0.0] * 5
+        self._anim_dirs = [1, -1, 1, -1, 1]
+        self._anim_speeds = [0.04, 0.05, 0.03, 0.045, 0.035]
+        
+        self._timer = QTimer()
+        self._timer.timeout.connect(self._animate)
+    
+    def set_active(self, active: bool):
+        self._is_active = active
+        if active:
+            self._timer.start(40)
+        else:
+            self._timer.stop()
+            self._anim_offsets = [0.0] * 5
+        self.update()
+    
+    def set_recording(self, recording: bool):
+        self._is_recording = recording
+        if recording:
+            self._timer.start(30)
+        else:
+            self.set_active(False)
+    
+    def _animate(self):
+        for i in range(5):
+            self._anim_offsets[i] += self._anim_speeds[i] * self._anim_dirs[i]
+            if self._anim_offsets[i] > 0.3:
+                self._anim_dirs[i] = -1
+            elif self._anim_offsets[i] < -0.3:
+                self._anim_dirs[i] = 1
+        self.update()
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        s = self._size
+        bar_width = s * 0.12
+        gap = s * 0.06
+        total_w = 5 * bar_width + 4 * gap
+        start_x = (s - total_w) / 2
+        max_h = s * 0.85
+        
+        for i in range(5):
+            h_ratio = self.BASE_HEIGHTS[i] + self._anim_offsets[i]
+            h_ratio = max(0.15, min(1.0, h_ratio))
+            h = max_h * h_ratio
+            x = start_x + i * (bar_width + gap)
+            y = (s - h) / 2
+            
+            painter.setBrush(QColor(self.BAR_COLORS[i]))
+            painter.setPen(Qt.NoPen)
+            
+            # Vẽ thanh bo tròn giống logo
+            radius = bar_width / 2
+            path = QPainterPath()
+            path.addRoundedRect(x, y, bar_width, h, radius, radius)
+            painter.drawPath(path)
 
 
 class AudioLevelBar(QProgressBar):
-    """Thanh hiển thị mức âm thanh với animation"""
+    """Thanh hiển thị mức âm thanh với gradient 4 màu Google"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -60,30 +140,30 @@ class AudioLevelBar(QProgressBar):
         
         self.setStyleSheet(f"""
             QProgressBar {{
-                background-color: {Colors.BG_SURFACE};
+                background-color: {Colors.BG_ELEVATED};
                 border: none;
                 border-radius: 3px;
             }}
             QProgressBar::chunk {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 {Colors.BLUE},
-                    stop:0.5 {Colors.GREEN},
-                    stop:1 {Colors.YELLOW});
+                    stop:0.33 {Colors.GREEN},
+                    stop:0.66 {Colors.YELLOW},
+                    stop:1 {Colors.RED});
                 border-radius: 3px;
             }}
         """)
 
 
 class StatusIndicator(QWidget):
-    """Indicator trạng thái với animation pulse"""
+    """Indicator trạng thái với animation pulse - dùng màu Google"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(12, 12)
+        self.setFixedSize(14, 14)
         self._color = Colors.TEXT_DISABLED
         self._is_active = False
         
-        # Animation cho pulse effect
         self._opacity = 1.0
         self._animation = QTimer()
         self._animation.timeout.connect(self._pulse)
@@ -119,26 +199,24 @@ class StatusIndicator(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # Vẽ vòng tròn với opacity
         painter.setOpacity(self._opacity)
         painter.setBrush(QColor(self._color))
         painter.setPen(Qt.NoPen)
-        painter.drawEllipse(2, 2, 8, 8)
+        painter.drawEllipse(2, 2, 10, 10)
         
-        # Vẽ glow effect nếu đang active
         if self._is_active:
             painter.setOpacity(self._opacity * 0.3)
-            painter.drawEllipse(0, 0, 12, 12)
+            painter.drawEllipse(0, 0, 14, 14)
 
 
 class ModernButton(QPushButton):
-    """Button với phong cách Google Drive"""
+    """Button với phong cách Google Material trên nền sáng"""
     
     def __init__(self, text, parent=None, primary=False, danger=False):
         super().__init__(text, parent)
         self.primary = primary
         self.danger = danger
-        self.setFixedHeight(40)
+        self.setFixedHeight(42)
         self.setCursor(Qt.PointingHandCursor)
         self._update_style()
         
@@ -146,20 +224,23 @@ class ModernButton(QPushButton):
         if self.danger:
             bg = Colors.RED
             bg_hover = Colors.RED_HOVER
+            text_color = "#FFFFFF"
         elif self.primary:
             bg = Colors.BLUE
             bg_hover = Colors.BLUE_HOVER
+            text_color = "#FFFFFF"
         else:
             bg = Colors.BG_ELEVATED
             bg_hover = Colors.BG_HOVER
+            text_color = Colors.TEXT_PRIMARY
         
         self.setStyleSheet(f"""
             QPushButton {{
                 background-color: {bg};
-                color: {Colors.TEXT_PRIMARY if not self.primary and not self.danger else Colors.BG_MAIN};
+                color: {text_color};
                 border: none;
-                border-radius: 8px;
-                padding: 8px 24px;
+                border-radius: 21px;
+                padding: 8px 28px;
                 font-size: 14px;
                 font-weight: 600;
             }}
@@ -167,17 +248,18 @@ class ModernButton(QPushButton):
                 background-color: {bg_hover};
             }}
             QPushButton:pressed {{
-                background-color: {Colors.BG_ACTIVE if not self.primary else bg};
+                background-color: {Colors.BG_ACTIVE if not self.primary and not self.danger else bg};
+                opacity: 0.9;
             }}
             QPushButton:disabled {{
-                background-color: {Colors.BG_SURFACE};
+                background-color: {Colors.BG_ELEVATED};
                 color: {Colors.TEXT_DISABLED};
             }}
         """)
 
 
 class ModernComboBox(QComboBox):
-    """ComboBox với phong cách Google Drive"""
+    """ComboBox với phong cách Google Material trên nền sáng"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -186,19 +268,20 @@ class ModernComboBox(QComboBox):
         
         self.setStyleSheet(f"""
             QComboBox {{
-                background-color: {Colors.BG_ELEVATED};
+                background-color: {Colors.BG_SURFACE};
                 color: {Colors.TEXT_PRIMARY};
                 border: 1px solid {Colors.BORDER};
-                border-radius: 8px;
-                padding: 6px 12px;
+                border-radius: 18px;
+                padding: 6px 14px;
                 font-size: 13px;
             }}
             QComboBox:hover {{
-                background-color: {Colors.BG_HOVER};
+                background-color: {Colors.BG_ELEVATED};
                 border-color: {Colors.BLUE};
             }}
             QComboBox:focus {{
                 border-color: {Colors.BLUE};
+                border-width: 2px;
             }}
             QComboBox::drop-down {{
                 border: none;
@@ -212,16 +295,17 @@ class ModernComboBox(QComboBox):
                 margin-right: 10px;
             }}
             QComboBox QAbstractItemView {{
-                background-color: {Colors.BG_SURFACE};
+                background-color: {Colors.BG_MAIN};
                 color: {Colors.TEXT_PRIMARY};
                 border: 1px solid {Colors.BORDER};
-                border-radius: 8px;
+                border-radius: 12px;
                 padding: 4px;
                 selection-background-color: {Colors.SELECTED};
+                selection-color: {Colors.BLUE};
             }}
             QComboBox QAbstractItemView::item {{
-                padding: 8px 12px;
-                border-radius: 4px;
+                padding: 8px 14px;
+                border-radius: 8px;
             }}
             QComboBox QAbstractItemView::item:hover {{
                 background-color: {Colors.BG_HOVER};
@@ -230,14 +314,23 @@ class ModernComboBox(QComboBox):
 
 
 class MainWindow(QMainWindow):
-    """Giao diện chính với phong cách Google Drive"""
+    """Giao diện chính với phong cách Google Sound Bars (Light Theme)"""
     
     def __init__(self):
         super().__init__()
         self.setWindowTitle("VoiceTyping")
-        self.setMinimumSize(420, 320)
-        self.setMaximumSize(600, 480)
-        self.setWindowIcon(QIcon("logo.ico"))
+        self.setMinimumSize(440, 380)
+        self.setMaximumSize(600, 520)
+        
+        # Tìm logo file
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self._logo_path = os.path.join(base_dir, "logo.png")
+        ico_path = os.path.join(base_dir, "logo.ico")
+        
+        if os.path.exists(ico_path):
+            self.setWindowIcon(QIcon(ico_path))
+        elif os.path.exists(self._logo_path):
+            self.setWindowIcon(QIcon(self._logo_path))
         
         # Flags - Giữ cửa sổ luôn trên cùng
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -266,25 +359,32 @@ class MainWindow(QMainWindow):
     def setup_tray(self):
         """Thiết lập System Tray Icon"""
         self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(QIcon("logo.ico"))
+        
+        ico_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logo.ico")
+        if os.path.exists(ico_path):
+            self.tray_icon.setIcon(QIcon(ico_path))
+        elif os.path.exists(self._logo_path):
+            self.tray_icon.setIcon(QIcon(self._logo_path))
+        
         self.tray_icon.setToolTip("VoiceTyping - Nhập văn bản bằng giọng nói")
         
-        # Tạo menu cho tray
+        # Tạo menu cho tray - light theme
         tray_menu = QMenu()
         tray_menu.setStyleSheet(f"""
             QMenu {{
-                background-color: {Colors.BG_SURFACE};
+                background-color: {Colors.BG_MAIN};
                 color: {Colors.TEXT_PRIMARY};
                 border: 1px solid {Colors.BORDER};
-                border-radius: 8px;
+                border-radius: 12px;
                 padding: 4px;
             }}
             QMenu::item {{
                 padding: 8px 20px;
-                border-radius: 4px;
+                border-radius: 6px;
             }}
             QMenu::item:selected {{
-                background-color: {Colors.BG_HOVER};
+                background-color: {Colors.BLUE_LIGHT};
+                color: {Colors.BLUE};
             }}
         """)
         
@@ -318,7 +418,6 @@ class MainWindow(QMainWindow):
         if reason == QSystemTrayIcon.DoubleClick:
             self.show_window()
         elif reason == QSystemTrayIcon.Trigger:
-            # Single click - toggle listening
             if self.toggle_btn.text().startswith("🎤"):
                 self.start_recognition()
             else:
@@ -344,29 +443,29 @@ class MainWindow(QMainWindow):
         super().changeEvent(event)
     
     def setup_ui(self):
-        """Thiết lập giao diện"""
-        # Main container với rounded corners và shadow
+        """Thiết lập giao diện - Google Sound Bars Light Theme"""
+        # Main container với nền trắng, bo tròn, shadow
         container = QWidget()
         container.setObjectName("mainContainer")
         container.setStyleSheet(f"""
             #mainContainer {{
                 background-color: {Colors.BG_MAIN};
-                border-radius: 16px;
+                border-radius: 20px;
                 border: 1px solid {Colors.DIVIDER};
             }}
         """)
         
-        # Shadow effect
+        # Shadow effect - nhẹ nhàng cho light theme
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(30)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        shadow.setOffset(0, 8)
+        shadow.setBlurRadius(40)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        shadow.setOffset(0, 4)
         container.setGraphicsEffect(shadow)
         
         self.setCentralWidget(container)
         
         main_layout = QVBoxLayout(container)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setContentsMargins(24, 20, 24, 20)
         main_layout.setSpacing(16)
         
         # ===== Header =====
@@ -379,9 +478,9 @@ class MainWindow(QMainWindow):
         divider.setStyleSheet(f"background-color: {Colors.DIVIDER};")
         main_layout.addWidget(divider)
         
-        # ===== Status Section =====
-        status_section = self._create_status_section()
-        main_layout.addLayout(status_section)
+        # ===== Center: Sound Bars + Status =====
+        center_layout = self._create_center_section()
+        main_layout.addLayout(center_layout)
         
         # ===== Audio Level =====
         self.audio_level_bar = AudioLevelBar()
@@ -402,14 +501,22 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(footer)
     
     def _create_header(self) -> QHBoxLayout:
-        """Tạo header với title và nút đóng"""
+        """Tạo header với logo PNG, title và nút đóng"""
         layout = QHBoxLayout()
         
-        # Logo và Title
+        # Logo + Title
         title_layout = QHBoxLayout()
         title_layout.setSpacing(10)
         
-        # Status indicator
+        # Logo image từ file
+        logo_label = QLabel()
+        if os.path.exists(self._logo_path):
+            pixmap = QPixmap(self._logo_path)
+            logo_label.setPixmap(pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo_label.setFixedSize(32, 32)
+        title_layout.addWidget(logo_label)
+        
+        # Status indicator (nhỏ, ẩn sau logo)
         self.status_indicator = StatusIndicator()
         title_layout.addWidget(self.status_indicator)
         
@@ -418,7 +525,7 @@ class MainWindow(QMainWindow):
         title.setStyleSheet(f"""
             color: {Colors.TEXT_PRIMARY};
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
         """)
         title_layout.addWidget(title)
         
@@ -435,7 +542,7 @@ class MainWindow(QMainWindow):
                 background-color: transparent;
                 color: {Colors.TEXT_SECONDARY};
                 border: none;
-                border-radius: 6px;
+                border-radius: 16px;
                 font-size: 14px;
             }}
             QPushButton:hover {{
@@ -454,28 +561,37 @@ class MainWindow(QMainWindow):
                 background-color: transparent;
                 color: {Colors.TEXT_SECONDARY};
                 border: none;
-                border-radius: 6px;
+                border-radius: 16px;
                 font-size: 14px;
             }}
             QPushButton:hover {{
-                background-color: {Colors.RED};
-                color: white;
+                background-color: {Colors.RED_LIGHT};
+                color: {Colors.RED};
             }}
         """)
         layout.addWidget(close_btn)
         
         return layout
     
-    def _create_status_section(self) -> QVBoxLayout:
-        """Tạo phần hiển thị trạng thái"""
+    def _create_center_section(self) -> QVBoxLayout:
+        """Tạo phần trung tâm với Sound Bars widget và status"""
         layout = QVBoxLayout()
-        layout.setSpacing(8)
+        layout.setSpacing(12)
+        layout.setAlignment(Qt.AlignCenter)
+        
+        # Sound Bars widget (animation giống logo)
+        bars_container = QHBoxLayout()
+        bars_container.setAlignment(Qt.AlignCenter)
+        self.sound_bars = SoundBarsWidget(size=56)
+        bars_container.addWidget(self.sound_bars)
+        layout.addLayout(bars_container)
         
         # Status label
         self.status_label = QLabel("Sẵn sàng")
         self.status_label.setStyleSheet(f"""
             color: {Colors.TEXT_SECONDARY};
             font-size: 14px;
+            font-weight: 500;
         """)
         self.status_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.status_label)
@@ -488,7 +604,8 @@ class MainWindow(QMainWindow):
             font-size: 13px;
             background-color: {Colors.BG_SURFACE};
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 1px solid {Colors.DIVIDER};
         """)
         self.last_text_label.setAlignment(Qt.AlignCenter)
         self.last_text_label.setMinimumHeight(50)
@@ -503,9 +620,11 @@ class MainWindow(QMainWindow):
         """Tạo các nút điều khiển"""
         layout = QHBoxLayout()
         layout.setSpacing(12)
+        layout.setAlignment(Qt.AlignCenter)
         
-        # Start/Stop button
+        # Start/Stop button - bo tròn pill shape
         self.toggle_btn = ModernButton("🎤 Bắt đầu", primary=True)
+        self.toggle_btn.setMinimumWidth(180)
         self.toggle_btn.clicked.connect(self.toggle_recognition)
         layout.addWidget(self.toggle_btn)
         
@@ -544,13 +663,24 @@ class MainWindow(QMainWindow):
         """Tạo footer"""
         layout = QHBoxLayout()
         
-        # Shortcut hint
+        # Shortcut hint - dùng tag màu Google
         hint = QLabel("💡 Giữ phím Alt để nói")
         hint.setStyleSheet(f"""
             color: {Colors.TEXT_DISABLED};
             font-size: 12px;
         """)
         layout.addWidget(hint)
+        
+        layout.addStretch()
+        
+        # 4 chấm màu Google nhỏ làm trang trí
+        dots_label = QLabel("● ● ● ●")
+        dots_label.setStyleSheet(f"""
+            color: {Colors.TEXT_DISABLED};
+            font-size: 6px;
+            letter-spacing: 2px;
+        """)
+        layout.addWidget(dots_label)
         
         layout.addStretch()
         
@@ -591,6 +721,7 @@ class MainWindow(QMainWindow):
         self.toggle_btn.danger = True
         self.toggle_btn._update_style()
         self.status_indicator.set_recording(True)
+        self.sound_bars.set_recording(True)
         self.recognizer.start_listening()
     
     def stop_recognition(self):
@@ -600,16 +731,19 @@ class MainWindow(QMainWindow):
         self.toggle_btn.danger = False
         self.toggle_btn._update_style()
         self.status_indicator.set_active(False)
+        self.sound_bars.set_active(False)
         self.recognizer.stop_listening()
         self.audio_level_bar.setValue(0)
     
     def on_listening_started(self):
         """Xử lý khi bắt đầu lắng nghe"""
         self.status_indicator.set_recording(True)
+        self.sound_bars.set_recording(True)
     
     def on_listening_stopped(self):
         """Xử lý khi dừng lắng nghe"""
         self.status_indicator.set_active(False)
+        self.sound_bars.set_active(False)
     
     def on_status_changed(self, status: str):
         """Cập nhật trạng thái"""
@@ -618,9 +752,9 @@ class MainWindow(QMainWindow):
     def on_error(self, error: str):
         """Hiển thị lỗi"""
         self.status_label.setText(f"❌ {error}")
-        self.status_label.setStyleSheet(f"color: {Colors.RED}; font-size: 14px;")
+        self.status_label.setStyleSheet(f"color: {Colors.RED}; font-size: 14px; font-weight: 500;")
         QTimer.singleShot(3000, lambda: self.status_label.setStyleSheet(
-            f"color: {Colors.TEXT_SECONDARY}; font-size: 14px;"
+            f"color: {Colors.TEXT_SECONDARY}; font-size: 14px; font-weight: 500;"
         ))
     
     def on_audio_level(self, level: float):
